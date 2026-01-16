@@ -26,7 +26,7 @@ func NewEngine(memoryLimit uint64, mf *bridge.MemoryFactory) *Engine {
 	}
 
 	bridge.RegisterConsole(vm)
-	bridge.RegisterMemory(vm)
+	bridge.RegisterMemory(vm, mf, el)
 	bridge.RegisterFmt(vm)
 	bridge.RegisterOS(vm)
 	bridge.RegisterHTTP(vm, el)

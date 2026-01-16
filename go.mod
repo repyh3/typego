@@ -1,13 +1,12 @@
 module github.com/repyh3/typego
 
-go 1.24.0
-
-toolchain go1.24.12
+go 1.25.0
 
 require (
 	github.com/dop251/goja v0.0.0-20260106131823-651366fbe6e3
 	github.com/evanw/esbuild v0.27.2
 	github.com/spf13/cobra v1.10.2
+	golang.org/x/tools v0.41.0
 )
 
 require (
@@ -20,5 +19,4 @@ require (
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.3.8 // indirect
-	golang.org/x/tools v0.41.0 // indirect
 )
