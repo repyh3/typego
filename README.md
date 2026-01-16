@@ -46,8 +46,8 @@ typego --version
 Create a new project with the recommended structure and configuration:
 
 ```bash
-typego init my-project
-cd my-project
+typego init
+typego run ./src/index.ts
 ```
 
 This generates a `tsconfig.json`, type definitions, and a sample `src/index.ts` file. Run your code with:
