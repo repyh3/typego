@@ -4,7 +4,28 @@ TypeGo is a TypeScript runtime built on Go. It lets you write TypeScript code th
 
 ## Why TypeGo?
 
-TypeScript developers often need functionality that's easier to implement in Go—things like efficient file handling, network protocols, or leveraging existing Go libraries. TypeGo bridges that gap by embedding a JavaScript engine (Goja) into Go, then providing a seamless import system that connects the two worlds.
+Backend development usually means picking a side: TypeScript for developer experience, or Go for operational simplicity. TypeGo lets you have both.
+
+### Actual Parallelism
+
+Node.js runs on a single thread. If you have a CPU-heavy task, it blocks everything else. TypeGo uses Go's goroutines under the hood, so you can spin up workers that run truly in parallel without freezing your main thread.
+
+### 📦  One Binary, Zero Drama
+
+No `node_modules` folder. No Docker multi-stage builds. No runtime version mismatches. TypeGo compiles your TypeScript, your dependencies, and the Go runtime into a single executable. Deploy by copying one file.
+
+### 🧠 Shared Memory Between Workers
+
+Passing data between Node.js workers means serializing to JSON and back. TypeGo gives you actual shared memory segments with mutex protection. Multiple workers can read and write the same buffer directly.
+
+### ⚡ Go's Standard Library
+
+Instead of pulling in NPM packages for basic system tasks, you can import Go's standard library directly. Need HTTP? Use `go:net/http`. Need crypto? Use `go:crypto`. It's all there.
+
+### 📉 Lightweight Runtime
+
+TypeGo uses Goja instead of V8. The tradeoff is raw JS execution speed, but you get much smaller binaries, faster startup, and lower memory usage. Good fit for CLI tools, sidecars, and serverless.
+
 
 ## Installation
 
