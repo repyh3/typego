@@ -1,4 +1,4 @@
-package bridge
+package polyfills
 
 import (
 	"os"
@@ -8,8 +8,8 @@ import (
 	"github.com/dop251/goja"
 )
 
-// EnableNodeCompat injects Node.js globals like process
-func EnableNodeCompat(vm *goja.Runtime) {
+// EnableProcess injects the Node.js `process` global
+func EnableProcess(vm *goja.Runtime) {
 	proc := vm.NewObject()
 
 	// process.env
@@ -20,7 +20,7 @@ func EnableNodeCompat(vm *goja.Runtime) {
 			env.Set(parts[0], parts[1])
 		}
 	}
-	// Force Node libraries (like chalk) to detect color support
+	// Force color support for libraries like chalk
 	env.Set("FORCE_COLOR", "1")
 	proc.Set("env", env)
 
