@@ -62,3 +62,25 @@ func RegisterMemoryFactory(vm *goja.Runtime, factory *MemoryFactory, el *eventlo
 
 	_ = vm.Set("__go_memory_factory__", obj)
 }
+
+// EnableMemoryFactory exposes makeShared directly on globalThis for standalone binaries
+func EnableMemoryFactory(vm *goja.Runtime, sharedBuffers map[string][]byte) {
+	vm.Set("makeShared", func(call goja.FunctionCall) goja.Value {
+		name := call.Argument(0).String()
+		size := int(call.Argument(1).ToInteger())
+
+		if name == "" || size <= 0 {
+			panic(vm.NewTypeError("makeShared requires a name and positive size"))
+		}
+
+		// Check if already exists
+		if buf, ok := sharedBuffers[name]; ok {
+			return vm.ToValue(vm.NewArrayBuffer(buf))
+		}
+
+		// Create new buffer
+		buf := make([]byte, size)
+		sharedBuffers[name] = buf
+		return vm.ToValue(vm.NewArrayBuffer(buf))
+	})
+}

@@ -60,3 +60,12 @@ func RegisterWorkerSelf(vm *goja.Runtime, postToParent func(msg goja.Value)) {
 		return goja.Undefined()
 	})
 }
+
+// EnableWorkerAPI sets up a basic Worker constructor for standalone binaries
+// Note: Worker threading in standalone binaries requires os/exec or similar,
+// which is complex. For now, this is a stub that panics with a helpful message.
+func EnableWorkerAPI(vm *goja.Runtime, el *eventloop.EventLoop) {
+	vm.Set("Worker", func(call goja.ConstructorCall) *goja.Object {
+		panic(vm.NewTypeError("Worker API is not yet supported in standalone binaries. Use 'typego run' for Worker support."))
+	})
+}

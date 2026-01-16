@@ -165,6 +165,7 @@ const shimTemplate = `package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	%s
 
@@ -190,6 +191,13 @@ func main() {
 	cliBuffer := make([]byte, 1024)
 	bridge.MapSharedBuffer(eng.VM, "cliBuffer", cliBuffer)
 
+	// Initialize Memory Factory (for makeShared)
+	sharedBuffers := make(map[string][]byte)
+	bridge.EnableMemoryFactory(eng.VM, sharedBuffers)
+
+	// Initialize Worker API
+	bridge.EnableWorkerAPI(eng.VM, eng.EventLoop)
+
 	// Initialize Native Tools
 	tools := &NativeTools{StartTime: "2026-01-16"}
 	_ = bridge.BindStruct(eng.VM, "native", tools)
@@ -197,6 +205,21 @@ func main() {
 	// Node.js Polyfills (Process & Buffer)
 	bridge.EnableNodeCompat(eng.VM)
 	_, _ = eng.VM.RunString("if (typeof Buffer === 'undefined') { globalThis.Buffer = { from: function(str) { if (typeof str === 'string') { var arr = []; for (var i = 0; i < str.length; i++) { arr.push(str.charCodeAt(i)); } return new Uint8Array(arr); } return new Uint8Array(str); }, alloc: function(size) { return new Uint8Array(size); } }; }")
+
+	// Timer Polyfill
+	eng.VM.Set("setTimeout", func(call goja.FunctionCall) goja.Value {
+		fn, _ := goja.AssertFunction(call.Argument(0))
+		ms := call.Argument(1).ToInteger()
+		eng.EventLoop.WGAdd(1)
+		go func() {
+			time.Sleep(time.Duration(ms) * time.Millisecond)
+			eng.EventLoop.RunOnLoop(func() {
+				_, _ = fn(goja.Undefined())
+				eng.EventLoop.WGDone()
+			})
+		}()
+		return goja.Undefined()
+	})
 
 	// Hyper-Linker Bindings (Generated)
 	%s
