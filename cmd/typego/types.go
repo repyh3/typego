@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 
+	"github.com/repyh3/typego/compiler"
+	"github.com/repyh3/typego/internal/linker"
 	"github.com/spf13/cobra"
 )
 
+var typesFile string
+
 var typesCmd = &cobra.Command{
-	Use:   "types",
+	Use:   "types [file]",
 	Short: "Sync and update TypeGo ambient definitions",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Syncing TypeGo definitions...")
@@ -20,13 +25,74 @@ var typesCmd = &cobra.Command{
 			return
 		}
 
-		masterDts, err := os.ReadFile("go.d.ts")
-		if err != nil {
-			fmt.Println("Warning: master go.d.ts not found in root.")
-			return
+		// Read existing (target) file first, fallback to master
+		var currentContent []byte
+		if existing, err := os.ReadFile(dtsPath); err == nil {
+			currentContent = existing
+		} else {
+			if master, err := os.ReadFile("go.d.ts"); err == nil {
+				currentContent = master
+			} else {
+				fmt.Println("Warning: master go.d.ts not found.")
+				return
+			}
 		}
 
-		if err := os.WriteFile(dtsPath, masterDts, 0644); err != nil {
+		// Initialize Fetcher
+		fetcher, err := linker.NewFetcher()
+		if err != nil {
+			fmt.Printf("Failed to init fetcher: %v\n", err)
+			return
+		}
+		defer fetcher.Cleanup()
+
+		// If a file is provided, scan it for imports
+		if len(args) > 0 {
+			filename := args[0]
+			absPath, _ := filepath.Abs(filename)
+			fmt.Printf("🔍 Scanning %s for imports...\n", absPath)
+
+			res, err := compiler.Compile(absPath, nil)
+			if err != nil {
+				fmt.Printf("Warning: Scan failed: %v\n", err)
+			}
+
+			if res != nil {
+				for _, imp := range res.Imports {
+					if len(imp) > 3 && imp[:3] == "go:" {
+						cleanImp := imp[3:]
+						fmt.Printf("📦 Generating types for %s...\n", cleanImp)
+
+						if err := fetcher.Get(cleanImp); err != nil {
+							// Ignored
+						}
+
+						info, err := linker.Inspect(cleanImp, fetcher.TempDir)
+						if err != nil {
+							fmt.Printf("Failed to inspect %s: %v\n", cleanImp, err)
+							continue
+						}
+
+						newTypeBlock := linker.GenerateTypes(info)
+
+						// Additive Merge Logic
+						// Regex to find existing block: // MODULE: go:pkg ... // END: go:pkg
+						pattern := fmt.Sprintf(`(?s)// MODULE: go:%s.*?// END: go:%s\n`, regexp.QuoteMeta(info.Name), regexp.QuoteMeta(info.Name))
+						re := regexp.MustCompile(pattern)
+
+						if re.Match(currentContent) {
+							// Replace existing
+							currentContent = re.ReplaceAll(currentContent, []byte(newTypeBlock))
+						} else {
+							// Append
+							currentContent = append(currentContent, []byte("\n"+newTypeBlock)...)
+						}
+					}
+				}
+			}
+		}
+
+		if err := os.WriteFile(dtsPath, currentContent, 0644); err != nil {
 			fmt.Printf("Error writing types: %v\n", err)
 			return
 		}

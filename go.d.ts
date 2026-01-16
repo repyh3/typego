@@ -117,3 +117,6 @@ declare const self: {
     postMessage(msg: any): void;
     onmessage: ((event: { data: any }) => void) | null;
 };
+
+
+
