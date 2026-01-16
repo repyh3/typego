@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -12,7 +13,8 @@ const tsConfigTemplate = `{
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
     "strict": true,
     "baseUrl": ".",
     "paths": {
@@ -25,6 +27,9 @@ const tsConfigTemplate = `{
 
 const indexTemplate = `import { Println } from "go/fmt";
 import { Sleep } from "go/sync";
+
+// You can now import NPM packages!
+// import _ from "lodash";
 
 async function main() {
     Println("🚀 TypeGo Project Initialized!");
@@ -60,6 +65,19 @@ var initCmd = &cobra.Command{
 			fmt.Println("Created tsconfig.json")
 		}
 
+		// Initialize NPM
+		if _, err := os.Stat("package.json"); os.IsNotExist(err) {
+			fmt.Println("📦 Initializing NPM...")
+			if err := execShellCmd("npm", "init", "-y"); err != nil {
+				fmt.Printf("Warning: npm init failed: %v\n", err)
+			} else {
+				fmt.Println("📥 Installing @types/node...")
+				if err := execShellCmd("npm", "install", "-D", "@types/node"); err != nil {
+					fmt.Printf("Warning: failed to install types: %v\n", err)
+				}
+			}
+		}
+
 		dtsPath := filepath.Join(".typego", "types", "go.d.ts")
 
 		found := false
@@ -82,6 +100,13 @@ var initCmd = &cobra.Command{
 
 		fmt.Println("\n✨ Project ready! Run with: typego run src/index.ts")
 	},
+}
+
+func execShellCmd(name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func init() {
