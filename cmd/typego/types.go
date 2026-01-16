@@ -63,49 +63,73 @@ declare module "go:*" {
 		}
 		defer fetcher.Cleanup()
 
-		// If a file is provided, scan it for imports
+		// Collect all TypeScript files to scan
+		var filesToScan []string
 		if len(args) > 0 {
-			filename := args[0]
-			absPath, _ := filepath.Abs(filename)
-			fmt.Printf("🔍 Scanning %s for imports...\n", absPath)
-
-			res, err := compiler.Compile(absPath, nil)
-			if err != nil {
-				fmt.Printf("Warning: Scan failed: %v\n", err)
+			// Explicit file provided
+			absPath, _ := filepath.Abs(args[0])
+			filesToScan = append(filesToScan, absPath)
+		} else {
+			// Find all .ts files in common locations
+			searchDirs := []string{".", "src", "lib"}
+			for _, dir := range searchDirs {
+				matches, _ := filepath.Glob(filepath.Join(dir, "*.ts"))
+				for _, m := range matches {
+					absPath, _ := filepath.Abs(m)
+					filesToScan = append(filesToScan, absPath)
+				}
+				// Also check subdirectories
+				subMatches, _ := filepath.Glob(filepath.Join(dir, "**", "*.ts"))
+				for _, m := range subMatches {
+					absPath, _ := filepath.Abs(m)
+					filesToScan = append(filesToScan, absPath)
+				}
 			}
+		}
 
+		// Collect unique Go imports from all files
+		goImports := make(map[string]bool)
+		for _, file := range filesToScan {
+			fmt.Printf("🔍 Scanning %s for imports...\n", file)
+			res, err := compiler.Compile(file, nil)
+			if err != nil {
+				fmt.Printf("Warning: Scan failed for %s: %v\n", file, err)
+				continue
+			}
 			if res != nil {
 				for _, imp := range res.Imports {
 					if len(imp) > 3 && imp[:3] == "go:" {
-						cleanImp := imp[3:]
-						fmt.Printf("📦 Generating types for %s...\n", cleanImp)
-
-						if err := fetcher.Get(cleanImp); err != nil {
-							// Ignored
-						}
-
-						info, err := linker.Inspect(cleanImp, fetcher.TempDir)
-						if err != nil {
-							fmt.Printf("Failed to inspect %s: %v\n", cleanImp, err)
-							continue
-						}
-
-						newTypeBlock := linker.GenerateTypes(info)
-
-						// Additive Merge Logic
-						// Regex to find existing block: // MODULE: go:pkg ... // END: go:pkg
-						pattern := fmt.Sprintf(`(?s)// MODULE: go:%s.*?// END: go:%s\n`, regexp.QuoteMeta(info.Name), regexp.QuoteMeta(info.Name))
-						re := regexp.MustCompile(pattern)
-
-						if re.Match(currentContent) {
-							// Replace existing
-							currentContent = re.ReplaceAll(currentContent, []byte(newTypeBlock))
-						} else {
-							// Append
-							currentContent = append(currentContent, []byte("\n"+newTypeBlock)...)
-						}
+						goImports[imp[3:]] = true
 					}
 				}
+			}
+		}
+
+		// Generate types for each unique import
+		for cleanImp := range goImports {
+			fmt.Printf("📦 Generating types for %s...\n", cleanImp)
+
+			if err := fetcher.Get(cleanImp); err != nil {
+				fmt.Printf("Warning: Failed to fetch %s: %v\n", cleanImp, err)
+				continue
+			}
+
+			info, err := linker.Inspect(cleanImp, fetcher.TempDir)
+			if err != nil {
+				fmt.Printf("Failed to inspect %s: %v\n", cleanImp, err)
+				continue
+			}
+
+			newTypeBlock := linker.GenerateTypes(info)
+
+			// Additive Merge Logic
+			pattern := fmt.Sprintf(`(?s)// MODULE: go:%s.*?// END: go:%s\n`, regexp.QuoteMeta(info.Name), regexp.QuoteMeta(info.Name))
+			re := regexp.MustCompile(pattern)
+
+			if re.Match(currentContent) {
+				currentContent = re.ReplaceAll(currentContent, []byte(newTypeBlock))
+			} else {
+				currentContent = append(currentContent, []byte("\n"+newTypeBlock)...)
 			}
 		}
 
