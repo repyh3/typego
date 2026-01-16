@@ -70,14 +70,30 @@ declare module "go:*" {
 			absPath, _ := filepath.Abs(args[0])
 			fileSet[absPath] = true
 		} else {
-			// Find all .ts files in common locations
-			searchDirs := []string{".", "src", "lib"}
-			for _, dir := range searchDirs {
-				matches, _ := filepath.Glob(filepath.Join(dir, "*.ts"))
-				for _, m := range matches {
-					absPath, _ := filepath.Abs(m)
+			// Recursively find all .ts files in the current project
+			err := filepath.WalkDir(".", func(path string, d os.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+
+				// Skip common non-source and system directories
+				if d.IsDir() {
+					name := d.Name()
+					if name == "node_modules" || name == ".typego" || name == ".git" || name == ".gemini" {
+						return filepath.SkipDir
+					}
+					return nil
+				}
+
+				// Only collect .ts files
+				if filepath.Ext(path) == ".ts" {
+					absPath, _ := filepath.Abs(path)
 					fileSet[absPath] = true
 				}
+				return nil
+			})
+			if err != nil {
+				fmt.Printf("Error searching for TypeScript files: %v\n", err)
 			}
 		}
 
@@ -85,7 +101,10 @@ declare module "go:*" {
 		goImports := make(map[string]bool)
 		for file := range fileSet {
 			fmt.Printf("🔍 Scanning %s...\n", filepath.Base(file))
-			res, _ := compiler.Compile(file, nil) // Ignore errors - expected during scan
+			res, err := compiler.Compile(file, nil)
+			if err != nil {
+				// Silently skip - expected during broad scan of potentially non-entrypoint files
+			}
 			if res != nil {
 				for _, imp := range res.Imports {
 					if len(imp) > 3 && imp[:3] == "go:" {

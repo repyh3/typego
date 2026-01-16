@@ -33,6 +33,7 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 						return api.OnResolveResult{Path: args.Path, Namespace: "typego-hyperlink"}, nil
 					})
 					build.OnResolve(api.OnResolveOptions{Filter: `^go/.*`}, func(args api.OnResolveArgs) (api.OnResolveResult, error) {
+						collectedImports = append(collectedImports, args.Path)
 						return api.OnResolveResult{Path: args.Path, Namespace: "typego-internal"}, nil
 					})
 					build.OnLoad(api.OnLoadOptions{Filter: `.*`, Namespace: "typego-hyperlink"}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
