@@ -94,7 +94,12 @@ var buildCmd = &cobra.Command{
 		var importBlock strings.Builder
 		for _, imp := range res.Imports {
 			if len(imp) > 3 && imp[:3] == "go:" {
-				importBlock.WriteString(fmt.Sprintf("\t\"%s\"\n", imp[3:]))
+				cleanImp := imp[3:]
+				// Skip hardcoded imports in shimTemplate
+				if cleanImp == "fmt" || cleanImp == "os" {
+					continue
+				}
+				importBlock.WriteString(fmt.Sprintf("\t\"%s\"\n", cleanImp))
 			}
 		}
 
@@ -188,6 +193,10 @@ func main() {
 	// Initialize Native Tools
 	tools := &NativeTools{StartTime: "2026-01-16"}
 	_ = bridge.BindStruct(eng.VM, "native", tools)
+
+	// Node.js Polyfills (Process & Buffer)
+	bridge.EnableNodeCompat(eng.VM)
+	_, _ = eng.VM.RunString("if (typeof Buffer === 'undefined') { globalThis.Buffer = { from: function(str) { if (typeof str === 'string') { var arr = []; for (var i = 0; i < str.length; i++) { arr.push(str.charCodeAt(i)); } return new Uint8Array(arr); } return new Uint8Array(str); }, alloc: function(size) { return new Uint8Array(size); } }; }")
 
 	// Hyper-Linker Bindings (Generated)
 	%s

@@ -3,22 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
-	"github.com/dop251/goja"
-	"github.com/repyh3/typego/bridge"
 	"github.com/repyh3/typego/compiler"
-	"github.com/repyh3/typego/engine"
+	"github.com/repyh3/typego/internal/linker"
 	"github.com/spf13/cobra"
 )
-
-type NativeTools struct {
-	StartTime string
-}
-
-func (n *NativeTools) GetRuntimeInfo() string {
-	return "TypeGo Supercharged Runtime v1.0"
-}
 
 var runCmd = &cobra.Command{
 	Use:   "run [file]",
@@ -28,46 +20,108 @@ var runCmd = &cobra.Command{
 		filename := args[0]
 		absPath, _ := filepath.Abs(filename)
 
-		res, err := compiler.Compile(absPath, nil)
+		// Create unique temp dir for this run
+		tmpDir, err := os.MkdirTemp("", "typego_run_*")
+		if err != nil {
+			fmt.Printf("Error creating temp dir: %v\n", err)
+			os.Exit(1)
+		}
+		defer os.RemoveAll(tmpDir)
+
+		// PASS 1: Scan
+		res, _ := compiler.Compile(absPath, nil)
+
+		// Initialize Fetcher
+		fetcher, err := linker.NewFetcher()
+		if err != nil {
+			fmt.Printf("Failed to init fetcher: %v\n", err)
+			os.Exit(1)
+		}
+		defer fetcher.Cleanup()
+
+		// Generate Virtual Modules
+		virtualModules := make(map[string]string)
+		var bindBlock string
+
+		if res != nil {
+			for _, imp := range res.Imports {
+				if len(imp) > 3 && imp[:3] == "go:" {
+					cleanImp := imp[3:]
+					if err := fetcher.Get(cleanImp); err == nil {
+						if info, err := linker.Inspect(cleanImp, fetcher.TempDir); err == nil {
+							bindBlock += linker.GenerateShim(info, "pkg_"+info.Name)
+							var vmContent strings.Builder
+							for _, fn := range info.Exports {
+								vmContent.WriteString(fmt.Sprintf("export const %s = (globalThis as any)._go_hyper_%s.%s;\n", fn.Name, info.Name, fn.Name))
+							}
+							virtualModules[imp] = vmContent.String()
+						}
+					}
+				}
+			}
+		}
+
+		// PASS 2: Compile
+		res, err = compiler.Compile(absPath, virtualModules)
 		if err != nil {
 			fmt.Printf("Build Error: %v\n", err)
 			os.Exit(1)
 		}
 
-		eng := engine.NewEngine(128*1024*1024, nil)
-
-		cliBuffer := make([]byte, 1024)
-		bridge.MapSharedBuffer(eng.VM, "cliBuffer", cliBuffer)
-
-		tools := &NativeTools{StartTime: "2026-01-16"}
-		_ = bridge.BindStruct(eng.VM, "native", tools)
-
-		eng.EventLoop.RunOnLoop(func() {
-			val, err := eng.Run(res.JS)
-			if err != nil {
-				fmt.Printf("Runtime Error: %v\n", err)
-				os.Exit(1)
-			}
-
-			if val != nil && !goja.IsUndefined(val) && !goja.IsNull(val) {
-				if obj := val.ToObject(eng.VM); obj != nil {
-					then := obj.Get("then")
-					if then != nil && !goja.IsUndefined(then) {
-						if _, ok := goja.AssertFunction(then); ok {
-							eng.EventLoop.WGAdd(1)
-							done := eng.VM.ToValue(func(goja.FunctionCall) goja.Value {
-								eng.EventLoop.WGDone()
-								return goja.Undefined()
-							})
-							thenFn, _ := goja.AssertFunction(then)
-							_, _ = thenFn(val, done, done)
-						}
-					}
+		// Generate Shim
+		var importBlock strings.Builder
+		for _, imp := range res.Imports {
+			if len(imp) > 3 && imp[:3] == "go:" {
+				cleanImp := imp[3:]
+				if cleanImp == "fmt" || cleanImp == "os" {
+					continue
 				}
+				importBlock.WriteString(fmt.Sprintf("\t\"%s\"\n", cleanImp))
 			}
-		})
+		}
 
-		eng.EventLoop.Start()
+		// Reuse shimTemplate from build.go
+		shimContent := fmt.Sprintf(shimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock)
+		if err := os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(shimContent), 0644); err != nil {
+			fmt.Printf("Error writing shim: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Generate go.mod
+		currWd, _ := os.Getwd()
+		goModContent := fmt.Sprintf(`module typego_run
+
+go 1.23.6
+
+require github.com/repyh3/typego v0.0.0
+
+replace github.com/repyh3/typego => %s
+`, filepath.ToSlash(currWd))
+		os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(goModContent), 0644)
+
+		// Tidy
+		tidy := exec.Command("go", "mod", "tidy")
+		tidy.Dir = tmpDir
+		tidy.Run() // Ignore errors, build might still work if cached
+
+		// Build
+		exePath := filepath.Join(tmpDir, "app.exe")
+		build := exec.Command("go", "build", "-o", exePath, ".")
+		build.Dir = tmpDir
+		build.Stdout = os.Stdout
+		build.Stderr = os.Stderr
+		if err := build.Run(); err != nil {
+			fmt.Printf("Compilation failed: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Run
+		run := exec.Command(exePath)
+		run.Stdout = os.Stdout
+		run.Stderr = os.Stderr
+		if err := run.Run(); err != nil {
+			os.Exit(1)
+		}
 	},
 }
 
