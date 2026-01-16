@@ -2,6 +2,11 @@
 
 TypeGo is a TypeScript runtime built on Go. It lets you write TypeScript code that can directly import and use Go packages, leverage NPM modules, and compile everything into a standalone native binary.
 
+> [!WARNING]
+> **Proof of Concept**: This project is currently a proof-of-concept and is **not intended for production use**. Maintenance will be random based on personal interest.
+>
+> **Community**: You are heartily encouraged to fork this repository and extend it! PRs are welcome, but active support is not guaranteed.
+
 ## Why TypeGo?
 
 Backend development usually means picking a side: TypeScript for developer experience, or Go for operational simplicity. TypeGo lets you have both.
