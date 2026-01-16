@@ -6,10 +6,15 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "go/*": ["../go.d.ts"]
+      "go/*": [
+        "../.typego/types/go.d.ts"
+      ]
     },
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["**/*.ts", "../go.d.ts"]
+  "include": [
+    "**/*.ts",
+    "../.typego/types/go.d.ts"
+  ]
 }
