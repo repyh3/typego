@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/repyh3/typego/compiler"
+	"github.com/repyh3/typego/internal/builder"
 	"github.com/repyh3/typego/internal/linker"
 	"github.com/spf13/cobra"
 )
@@ -80,8 +81,8 @@ var runCmd = &cobra.Command{
 			}
 		}
 
-		// Reuse shimTemplate from build.go
-		shimContent := fmt.Sprintf(shimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, memoryLimit*1024*1024)
+		// Use shared ShimTemplate from internal/builder
+		shimContent := fmt.Sprintf(builder.ShimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, memoryLimit*1024*1024)
 		if err := os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(shimContent), 0644); err != nil {
 			fmt.Printf("Error writing shim: %v\n", err)
 			os.Exit(1)

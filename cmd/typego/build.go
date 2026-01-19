@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/repyh3/typego/compiler"
+	"github.com/repyh3/typego/internal/builder"
 	"github.com/repyh3/typego/internal/linker"
 	"github.com/spf13/cobra"
 )
@@ -103,7 +104,7 @@ var buildCmd = &cobra.Command{
 			}
 		}
 
-		shimContent := fmt.Sprintf(shimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, memoryLimit*1024*1024)
+		shimContent := fmt.Sprintf(builder.ShimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, memoryLimit*1024*1024)
 
 		shimPath := filepath.Join(tmpDir, "main.go")
 		if err := os.WriteFile(shimPath, []byte(shimContent), 0644); err != nil {
@@ -170,85 +171,6 @@ go 1.23.6
 		fmt.Printf("✨ Binary created: %s\n", outputName)
 	},
 }
-
-const shimTemplate = `package main
-
-import (
-	"fmt"
-	"os"
-
-	%[1]s
-
-	"github.com/dop251/goja"
-	"github.com/repyh3/typego/bridge"
-	"github.com/repyh3/typego/bridge/polyfills"
-	"github.com/repyh3/typego/engine"
-)
-
-const jsBundle = %[2]s
-
-type NativeTools struct {
-	StartTime string
-}
-
-func (n *NativeTools) GetRuntimeInfo() string {
-	return "TypeGo Standalone v1.0"
-}
-
-func main() {
-	eng := engine.NewEngine(%[4]d, nil)
-
-	// Initialize Shared Buffer
-	cliBuffer := make([]byte, 1024)
-	bridge.MapSharedBuffer(eng.VM, "cliBuffer", cliBuffer)
-
-	// Initialize Memory Factory (for makeShared)
-	sharedBuffers := make(map[string][]byte)
-	bridge.EnableMemoryFactory(eng.VM, sharedBuffers)
-
-	// Initialize Worker API
-	bridge.EnableWorkerAPI(eng.VM, eng.EventLoop)
-
-	// Initialize Native Tools
-	tools := &NativeTools{StartTime: "2026-01-16"}
-	_ = bridge.BindStruct(eng.VM, "native", tools)
-
-	// Node.js Polyfills (Process, Buffer, Timers)
-	polyfills.EnableAll(eng.VM, eng.EventLoop)
-
-	// Hyper-Linker Bindings (Generated)
-	%[3]s
-
-	// Run on EventLoop
-	eng.EventLoop.RunOnLoop(func() {
-		val, err := eng.Run(jsBundle)
-		if err != nil {
-			fmt.Printf("Runtime Error: %%v\n", err)
-			os.Exit(1)
-		}
-
-		// Handle Top-Level Async (Promises)
-		if val != nil && !goja.IsUndefined(val) && !goja.IsNull(val) {
-			if obj := val.ToObject(eng.VM); obj != nil {
-				then := obj.Get("then")
-				if then != nil && !goja.IsUndefined(then) {
-					if _, ok := goja.AssertFunction(then); ok {
-						eng.EventLoop.WGAdd(1)
-						done := eng.VM.ToValue(func(goja.FunctionCall) goja.Value {
-							eng.EventLoop.WGDone()
-							return goja.Undefined()
-						})
-						thenFn, _ := goja.AssertFunction(then)
-						_, _ = thenFn(val, done, done)
-					}
-				}
-			}
-		}
-	})
-
-	eng.EventLoop.Start()
-}
-`
 
 func init() {
 	buildCmd.Flags().StringVarP(&buildOut, "out", "o", "dist/index.js", "Output bundle path")
