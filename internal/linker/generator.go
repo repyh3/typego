@@ -20,6 +20,10 @@ func GenerateShim(info *PackageInfo, variableName string) string {
 
 	// Bind struct constructors (factory functions)
 	for _, st := range info.Structs {
+		// Skip unexported structs (defensive check)
+		if len(st.Name) == 0 || st.Name[0] < 'A' || st.Name[0] > 'Z' {
+			continue
+		}
 		sb.WriteString(fmt.Sprintf("\t// Struct: %s\n", st.Name))
 		sb.WriteString(fmt.Sprintf("\t%s.Set(\"New%s\", func() interface{} { return &%s.%s{} })\n",
 			variableName, st.Name, info.Name, st.Name))

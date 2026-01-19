@@ -247,14 +247,12 @@ func parseMethod(fn *ast.FuncDecl, structMap map[string]*ExportedStruct) {
 		}
 	}
 
+	// Only attach method if the receiver type is already in structMap
+	// (meaning it was identified as a struct type by parseTypeDecl)
 	if existing, ok := structMap[baseName]; ok {
 		existing.Methods = append(existing.Methods, method)
-	} else {
-		structMap[baseName] = &ExportedStruct{
-			Name:    baseName,
-			Methods: []MethodInfo{method},
-		}
 	}
+	// Non-struct types (like "type Error string") are ignored
 }
 
 func isStructType(typeName string) bool {
