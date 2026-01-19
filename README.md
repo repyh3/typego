@@ -84,6 +84,25 @@ Red("Colored output from the fatih/color library");
 
 When you import a third-party Go package, TypeGo fetches it using `go get` and generates the necessary bindings automatically.
 
+## Struct Binding
+
+TypeGo supports importing Go structs with full field and method access:
+
+```typescript
+import { NewColor } from "go:github.com/fatih/color";
+
+const c = NewColor();  // Factory function creates Go struct
+c.Add(1);              // Call methods
+console.log(c.value);  // Access fields
+```
+
+Features:
+- **Nested structs**: Access deeply nested fields (`req.Headers.Get("key")`)
+- **Method receivers**: Both pointer and value receiver methods work
+- **Callbacks**: Pass JavaScript functions to Go methods that accept `func(...)` parameters
+- **Auto Type Generation**: Run `typego types` to generate `.d.ts` definitions with full IDE autocomplete
+
+
 ## NPM Package Support
 
 Standard NPM packages work out of the box. TypeGo bundles them using esbuild before execution.
