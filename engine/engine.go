@@ -15,7 +15,9 @@ import (
 	"github.com/repyh3/typego/eventloop"
 
 	// Import modules to trigger their init() registration
+	_ "github.com/repyh3/typego/bridge/modules/crypto"
 	_ "github.com/repyh3/typego/bridge/modules/fmt"
+	_ "github.com/repyh3/typego/bridge/modules/json"
 	_ "github.com/repyh3/typego/bridge/modules/net"
 	_ "github.com/repyh3/typego/bridge/modules/os"
 	_ "github.com/repyh3/typego/bridge/modules/sync"
