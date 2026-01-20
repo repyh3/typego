@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/repyh3/typego/bridge"
 	"github.com/repyh3/typego/bridge/core"
 	"github.com/repyh3/typego/bridge/stdlib/memory"
 	"github.com/repyh3/typego/bridge/stdlib/worker"
@@ -45,7 +44,7 @@ func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
 	}
 
 	// Core modules (special dependencies)
-	bridge.RegisterConsole(vm)
+	core.RegisterConsole(vm)
 	// Register new stdlib modules
 	memory.Register(vm, el, mf)
 

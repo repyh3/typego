@@ -142,7 +142,7 @@ go 1.23.6
 
 		// Fetch all required typego packages
 		packages := []string{
-			"github.com/repyh3/typego/bridge",
+			"github.com/repyh3/typego/bridge/core",
 			"github.com/repyh3/typego/bridge/polyfills",
 			"github.com/repyh3/typego/engine",
 			"github.com/repyh3/typego/eventloop",
