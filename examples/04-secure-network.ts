@@ -1,5 +1,5 @@
-import { Fetch } from "go/net/http";
-import { Println } from "go/fmt";
+import { Get } from "go:net/http";
+import { Println } from "go:fmt";
 
 /**
  * Secure Network Showcase
@@ -14,24 +14,23 @@ async function testFetch() {
     Println("🌐 Fetching from API...");
 
     try {
-        const res = await Fetch("https://httpbin.org/get?msg=TypeGo_Secure_Fetch");
-        Println(`Status: ${res.StatusCode} ${res.Status}`);
-
-        const bodySnippet = res.Body.substring(0, 100);
-        Println(`Response Body (snippet): ${bodySnippet}...`);
+        // Go's http.Get is synchronous, but we can treat it as such or await if wrapped.
+        // TypeGo generated functions are synchronous in JS unless they return Promise.
+        // Since http.Get blocks, it will return the Response object directly.
+        const res = Get("https://httpbin.org/get?msg=TypeGo_Secure_Fetch");
+        Println(`Status: ${res.Status}`);
 
     } catch (e) {
         Println(`❌ Fetch Error: ${e}`);
     }
 
     // Attempting a larger request (This will fail due to guardrails)
-    Println("\n🛡️ Testing Guardrails: Fetching oversized data (Limit: 50MB)...");
+    Println("\n🛡️ Test: Fetching oversized data...");
     try {
-        // Requesting 60MB (This should trigger the 50MB guardrail)
-        await Fetch("https://httpbin.org/bytes/60000000");
-        Println("❌ Failed: Guardrail didn't catch large response!");
+        const res = Get("https://httpbin.org/bytes/60000000");
+        Println(`Status: ${res.Status}`);
     } catch (e) {
-        Println(`✅ Success: Guardrail blocked large response. Error: ${e}`);
+        Println(`✅ Success: Error caught: ${e}`);
     }
 }
 

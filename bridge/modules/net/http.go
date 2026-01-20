@@ -1,4 +1,5 @@
-package bridge
+// Package http provides bindings for Go's net/http package.
+package http
 
 import (
 	"fmt"
@@ -7,8 +8,26 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
+	"github.com/repyh3/typego/bridge/core"
 	"github.com/repyh3/typego/eventloop"
 )
+
+func init() {
+	core.RegisterModule(&httpModule{})
+}
+
+type httpModule struct {
+	el *eventloop.EventLoop
+}
+
+func (m *httpModule) Name() string {
+	return "go:net/http"
+}
+
+func (m *httpModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
+	m.el = el
+	Register(vm, el)
+}
 
 // Default HTTP client with production-ready timeouts
 var httpClient = &http.Client{
@@ -17,11 +36,11 @@ var httpClient = &http.Client{
 
 const maxResponseBodySize = 50 * 1024 * 1024 // 50MB
 
-// HTTPModule implements the go/net/http package
-type HTTPModule struct{}
+// Module implements the go:net/http package bindings.
+type Module struct{}
 
 // Get maps to http.Get
-func (h *HTTPModule) Get(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
+func (h *Module) Get(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
 		url := call.Argument(0).String()
 
@@ -31,8 +50,6 @@ func (h *HTTPModule) Get(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 		}
 		defer resp.Body.Close()
 
-		// Safeguard against OOM by limiting the reader to max + 1
-		// If we read max + 1 bytes, we know it's too large.
 		limit := int64(maxResponseBodySize)
 		body, err := io.ReadAll(io.LimitReader(resp.Body, limit+1))
 		if err != nil && err != io.EOF {
@@ -52,9 +69,9 @@ func (h *HTTPModule) Get(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	}
 }
 
-// RegisterHTTP injects the http functions into the runtime
-func RegisterHTTP(vm *goja.Runtime, el *eventloop.EventLoop) {
-	h := &HTTPModule{}
+// Register injects the http functions into the runtime
+func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
+	h := &Module{}
 
 	obj := vm.NewObject()
 	obj.Set("Get", h.Get(vm))

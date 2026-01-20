@@ -27,18 +27,21 @@ type ExportedFunc struct {
 
 // ExportedStruct represents an exported struct type with its fields and methods.
 type ExportedStruct struct {
-	Name    string
-	Doc     string
-	Fields  []FieldInfo
-	Methods []MethodInfo
+	Name        string
+	PackagePath string // Source package import path
+	TypeParams  []string
+	Doc         string
+	Fields      []FieldInfo
+	Methods     []MethodInfo
 }
 
 // FieldInfo describes a struct field.
 type FieldInfo struct {
-	Name     string
-	Type     string
-	TSType   string
-	IsNested bool
+	Name       string
+	Type       string
+	TSType     string
+	IsNested   bool
+	ImportPath string
 }
 
 // MethodInfo describes a method attached to a struct.
@@ -71,6 +74,8 @@ func GoToTSType(goType string) string {
 		return "boolean"
 	case "error":
 		return "Error | null"
+	case "interface{}", "any":
+		return "any"
 	default:
 		if strings.HasPrefix(goType, "[]") {
 			return GoToTSType(goType[2:]) + "[]"
@@ -83,6 +88,21 @@ func GoToTSType(goType string) string {
 		}
 		if strings.HasPrefix(goType, "*") {
 			return GoToTSType(goType[1:])
+		}
+		// Handle variadic types (e.g. "...any" or "...int")
+		if strings.HasPrefix(goType, "...") {
+			// Return the base type array (e.g. "any[]")
+			// The generator will handle the rest parameter syntax
+			baseType := goType[3:]
+			return GoToTSType(baseType) + "[]"
+		}
+		// Handle channels
+		if strings.HasPrefix(goType, "chan ") || strings.HasPrefix(goType, "<-chan ") || strings.HasPrefix(goType, "chan<- ") {
+			return "any"
+		}
+		// Handle anonymous structs
+		if strings.HasPrefix(goType, "struct{") {
+			return "any"
 		}
 		return goType
 	}
@@ -121,7 +141,7 @@ func Inspect(importPath string, dir string) (*PackageInfo, error) {
 		for _, decl := range syntax.Decls {
 			switch d := decl.(type) {
 			case *ast.GenDecl:
-				parseTypeDecl(d, structMap)
+				parseTypeDecl(d, structMap, pkg.PkgPath, pkg.TypesInfo)
 			case *ast.FuncDecl:
 				if d.Recv == nil {
 					if ast.IsExported(d.Name.Name) {
@@ -141,7 +161,7 @@ func Inspect(importPath string, dir string) (*PackageInfo, error) {
 	return info, nil
 }
 
-func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct) {
+func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct, pkgPath string, info *types.Info) {
 	for _, spec := range decl.Specs {
 		ts, ok := spec.(*ast.TypeSpec)
 		if !ok || !ast.IsExported(ts.Name.Name) {
@@ -154,8 +174,18 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct) {
 		}
 
 		exported := &ExportedStruct{
-			Name: ts.Name.Name,
-			Doc:  strings.TrimSpace(decl.Doc.Text()),
+			Name:        ts.Name.Name,
+			PackagePath: pkgPath,
+			Doc:         strings.TrimSpace(decl.Doc.Text()),
+		}
+
+		// Capture Generic Type Parameters
+		if ts.TypeParams != nil {
+			for _, param := range ts.TypeParams.List {
+				for _, name := range param.Names {
+					exported.TypeParams = append(exported.TypeParams, name.Name)
+				}
+			}
 		}
 
 		if st.Fields != nil {
@@ -168,11 +198,31 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct) {
 						continue
 					}
 					goType := types.ExprString(field.Type)
+
+					// Resolve import path
+					var importPath string
+					if info != nil {
+						if t, ok := info.Types[field.Type]; ok {
+							if named, ok := t.Type.(*types.Named); ok {
+								if pkg := named.Obj().Pkg(); pkg != nil {
+									importPath = pkg.Path()
+								}
+							} else if ptr, ok := t.Type.(*types.Pointer); ok {
+								if named, ok := ptr.Elem().(*types.Named); ok {
+									if pkg := named.Obj().Pkg(); pkg != nil {
+										importPath = pkg.Path()
+									}
+								}
+							}
+						}
+					}
+
 					exported.Fields = append(exported.Fields, FieldInfo{
-						Name:     name.Name,
-						Type:     goType,
-						TSType:   GoToTSType(goType),
-						IsNested: isStructType(goType),
+						Name:       name.Name,
+						Type:       goType,
+						TSType:     GoToTSType(goType),
+						IsNested:   isStructType(goType),
+						ImportPath: importPath,
 					})
 				}
 			}
@@ -197,10 +247,18 @@ func parseFunc(fn *ast.FuncDecl) ExportedFunc {
 		}
 	}
 
+	var ret []string
+	if fn.Type.Results != nil {
+		for _, result := range fn.Type.Results.List {
+			ret = append(ret, types.ExprString(result.Type))
+		}
+	}
+
 	return ExportedFunc{
 		Name: fn.Name.Name,
 		Doc:  strings.TrimSpace(fn.Doc.Text()),
 		Args: args,
+		Ret:  ret,
 	}
 }
 

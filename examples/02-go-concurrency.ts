@@ -1,5 +1,5 @@
-import { Spawn, Sleep } from "go/sync";
-import { Println } from "go/fmt";
+import { Spawn, Sleep } from "go:sync";
+import { Println } from "go:fmt";
 
 /**
  * Go Concurrency Showcase

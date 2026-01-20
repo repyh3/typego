@@ -1,6 +1,6 @@
-import { Spawn } from "go/sync";
-import { Println } from "go/fmt";
-import { makeShared } from "go/memory";
+import { Spawn } from "go:sync";
+import { Println } from "go:fmt";
+import { makeShared } from "go:memory";
 
 /**
  * Multi-Threading & Shared Memory Showcase

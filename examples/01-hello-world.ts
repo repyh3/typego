@@ -1,4 +1,4 @@
-import { Println } from "go/fmt";
+import { Println } from "go:fmt";
 
 /**
  * TypeGo Hello World

@@ -30,7 +30,18 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 					build.OnResolve(api.OnResolveOptions{Filter: `^go:.*`}, func(args api.OnResolveArgs) (api.OnResolveResult, error) {
 						// Capture the import
 						collectedImports = append(collectedImports, args.Path)
+
+						// Check for core modules and redirect to internal namespace
+						switch args.Path {
+						case "go:fmt", "go:os", "go:sync", "go:net/http", "go:memory":
+							return api.OnResolveResult{Path: args.Path, Namespace: "typego-internal"}, nil
+						}
+
 						return api.OnResolveResult{Path: args.Path, Namespace: "typego-hyperlink"}, nil
+					})
+					build.OnResolve(api.OnResolveOptions{Filter: `^typego:.*`}, func(args api.OnResolveArgs) (api.OnResolveResult, error) {
+						collectedImports = append(collectedImports, args.Path)
+						return api.OnResolveResult{Path: args.Path, Namespace: "typego-internal"}, nil
 					})
 					build.OnResolve(api.OnResolveOptions{Filter: `^go/.*`}, func(args api.OnResolveArgs) (api.OnResolveResult, error) {
 						collectedImports = append(collectedImports, args.Path)
@@ -50,16 +61,21 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 					build.OnLoad(api.OnLoadOptions{Filter: `.*`, Namespace: "typego-internal"}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
 						var content string
 						switch args.Path {
-						case "go/memory":
-							content = "export const Ptr = (globalThis as any).Ptr; const mf = (globalThis as any).__go_memory_factory__; export const makeShared = mf.makeShared;"
-						case "go/fmt":
-							content = "const f = (globalThis as any).__go_fmt__; export const Println = f.Println;"
-						case "go/os":
+						case "go/memory", "go:memory":
+							content = "const m = (globalThis as any).__typego_memory__; export const Ptr = m.ptr; export const makeShared = m.makeShared;"
+						case "go/fmt", "go:fmt":
+							content = "const f = (globalThis as any).__go_fmt__; export const Println = f.Println; export const Printf = f.Printf;"
+						case "go/os", "go:os":
 							content = "const o = (globalThis as any).__go_os__; export const WriteFile = o.WriteFile; export const ReadFile = o.ReadFile;"
-						case "go/net/http":
+						case "go/net/http", "go:net/http":
 							content = "const h = (globalThis as any).__go_http__; export const Get = h.Get; export const Fetch = h.Fetch;"
-						case "go/sync":
+						case "go/sync", "go:sync":
 							content = "const s = (globalThis as any).__go_sync__; export const Spawn = s.Spawn; export const Sleep = s.Sleep; export const Chan = (globalThis as any).Chan;"
+						// New TypeGo Stdlib
+						case "typego:memory":
+							content = "const m = (globalThis as any).__typego_memory__; export const makeShared = m.makeShared; export const stats = m.stats; export const ptr = m.ptr;"
+						case "typego:worker":
+							content = "const w = (globalThis as any).__typego_worker__; export const Worker = w.Worker;"
 						default:
 							return api.OnLoadResult{Errors: []api.Message{{Text: "Unknown virtual module: " + args.Path}}}, nil
 						}

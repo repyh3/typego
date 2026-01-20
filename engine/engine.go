@@ -10,7 +10,16 @@ import (
 
 	"github.com/dop251/goja"
 	"github.com/repyh3/typego/bridge"
+	"github.com/repyh3/typego/bridge/core"
+	"github.com/repyh3/typego/bridge/stdlib/memory"
+	"github.com/repyh3/typego/bridge/stdlib/worker"
 	"github.com/repyh3/typego/eventloop"
+
+	// Import modules to trigger their init() registration
+	_ "github.com/repyh3/typego/bridge/modules/fmt"
+	_ "github.com/repyh3/typego/bridge/modules/net"
+	_ "github.com/repyh3/typego/bridge/modules/os"
+	_ "github.com/repyh3/typego/bridge/modules/sync"
 )
 
 var ErrMemoryLimitExceeded = errors.New("memory limit exceeded")
@@ -19,29 +28,29 @@ type Engine struct {
 	VM            *goja.Runtime
 	MemoryLimit   uint64
 	EventLoop     *eventloop.EventLoop
-	MemoryFactory *bridge.MemoryFactory
+	MemoryFactory *memory.Factory
 
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-func NewEngine(memoryLimit uint64, mf *bridge.MemoryFactory) *Engine {
+func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
 	vm := goja.New()
 	vm.SetMaxCallStackSize(1000)
 
 	el := eventloop.NewEventLoop(vm)
 
 	if mf == nil {
-		mf = bridge.NewMemoryFactory()
+		mf = memory.NewFactory()
 	}
 
+	// Core modules (special dependencies)
 	bridge.RegisterConsole(vm)
-	bridge.RegisterMemory(vm, mf, el)
-	bridge.RegisterFmt(vm)
-	bridge.RegisterOS(vm)
-	bridge.RegisterHTTP(vm, el)
-	bridge.RegisterSync(vm, el)
-	bridge.RegisterMemoryFactory(vm, mf, el)
+	// Register new stdlib modules
+	memory.Register(vm, el, mf)
+
+	// Auto-registered modules (fmt, os, http, sync)
+	core.InitAll(vm, el)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -54,7 +63,7 @@ func NewEngine(memoryLimit uint64, mf *bridge.MemoryFactory) *Engine {
 		cancel:        cancel,
 	}
 
-	bridge.RegisterWorker(vm, el, eng.SpawnWorker)
+	worker.Register(vm, el, eng.SpawnWorker)
 
 	if memoryLimit > 0 {
 		eng.StartMemoryMonitor(100 * time.Millisecond)
@@ -72,7 +81,7 @@ func (e *Engine) GlobalSet(name string, value interface{}) error {
 }
 
 func (e *Engine) BindStruct(name string, s interface{}) error {
-	return bridge.BindStruct(e.VM, name, s)
+	return core.BindStruct(e.VM, name, s)
 }
 
 func (e *Engine) Close() {

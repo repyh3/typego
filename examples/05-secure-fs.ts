@@ -1,5 +1,5 @@
-import { WriteFile, ReadFile } from "go/os";
-import { Println } from "go/fmt";
+import { WriteFile, ReadFile } from "go:os";
+import { Println } from "go:fmt";
 
 /**
  * Secure Sandbox (The Vault) Showcase
@@ -15,9 +15,12 @@ async function main() {
     // 1. Valid access within the jail
     Println("\n--- Valid Access ---");
     try {
-        WriteFile("sandbox_demo.txt", "TypeGo Protection: ACTIVE");
+        // Go's bridge accepts string and converts to []byte internally
+        WriteFile("sandbox_demo.txt", "TypeGo Protection: ACTIVE" as any, 0o644);
         const data = ReadFile("sandbox_demo.txt");
-        Println(`✅ Read successful: "${data}"`);
+        // Use TextDecoder polyfill for proper UTF-8 decoding
+        const text = new TextDecoder().decode(new Uint8Array(data));
+        Println(`✅ Read successful: "${text}"`);
     } catch (e) {
         Println(`❌ Unexpected failure: ${e}`);
     }
@@ -25,7 +28,7 @@ async function main() {
     // 2. Blocked access outside the jail (Relative escape)
     Println("\n--- Blocked Escape (../../) ---");
     try {
-        WriteFile("../../jailbreak.txt", "escaping...");
+        WriteFile("../../jailbreak.txt", "escaping..." as any, 0o644);
         Println("❌ FAILURE: Escaped the jail!");
     } catch (e) {
         Println(`✅ Success: Blocked. Error: ${e}`);

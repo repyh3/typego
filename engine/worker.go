@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/dop251/goja"
-	"github.com/repyh3/typego/bridge"
+	"github.com/repyh3/typego/bridge/stdlib/worker"
 	"github.com/repyh3/typego/compiler"
 )
 
@@ -26,7 +26,7 @@ func (w *WorkerInstance) Terminate() {
 	close(w.stop)
 }
 
-func (e *Engine) SpawnWorker(scriptPath string, onMessage func(goja.Value)) (bridge.WorkerHandle, error) {
+func (e *Engine) SpawnWorker(scriptPath string, onMessage func(goja.Value)) (worker.Handle, error) {
 	res, err := compiler.Compile(scriptPath, nil)
 	if err != nil {
 		return nil, fmt.Errorf("compile error: %w", err)
@@ -44,7 +44,7 @@ func (e *Engine) SpawnWorker(scriptPath string, onMessage func(goja.Value)) (bri
 		stop:   stop,
 	}
 
-	bridge.RegisterWorkerSelf(workerEng.VM, func(msg goja.Value) {
+	worker.RegisterSelf(workerEng.VM, func(msg goja.Value) {
 		data := msg.Export()
 		e.EventLoop.RunOnLoop(func() {
 			val := e.VM.ToValue(data)

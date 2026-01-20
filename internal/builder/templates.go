@@ -8,4 +8,70 @@ package builder
 //   - %[2]s: The bundled JavaScript code (quoted string)
 //   - %[3]s: Hyper-linker binding code (generated shims)
 //   - %[4]d: Memory limit in bytes
-const ShimTemplate = "package main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\n\t%[1]s\n\n\t\"github.com/dop251/goja\"\n\t\"github.com/repyh3/typego/bridge\"\n\t\"github.com/repyh3/typego/bridge/polyfills\"\n\t\"github.com/repyh3/typego/engine\"\n)\n\nconst jsBundle = %[2]s\n\ntype NativeTools struct {\n\tStartTime string\n}\n\nfunc (n *NativeTools) GetRuntimeInfo() string {\n\treturn \"TypeGo Standalone v1.0\"\n}\n\nfunc main() {\n\teng := engine.NewEngine(%[4]d, nil)\n\n\t// Initialize Shared Buffer\n\tcliBuffer := make([]byte, 1024)\n\tbridge.MapSharedBuffer(eng.VM, \"cliBuffer\", cliBuffer)\n\n\t// Initialize Memory Factory (for makeShared)\n\tsharedBuffers := make(map[string][]byte)\n\tbridge.EnableMemoryFactory(eng.VM, sharedBuffers)\n\n\t// Initialize Worker API\n\tbridge.EnableWorkerAPI(eng.VM, eng.EventLoop)\n\n\t// Initialize Native Tools\n\ttools := &NativeTools{StartTime: \"2026-01-16\"}\n\t_ = bridge.BindStruct(eng.VM, \"native\", tools)\n\n\t// Node.js Polyfills (Process, Buffer, Timers)\n\tpolyfills.EnableAll(eng.VM, eng.EventLoop)\n\n\t// Hyper-Linker Bindings (Generated)\n\t%[3]s\n\n\t// Run on EventLoop\n\teng.EventLoop.RunOnLoop(func() {\n\t\tval, err := eng.Run(jsBundle)\n\t\tif err != nil {\n\t\t\tfmt.Printf(\"Runtime Error: %%v\\n\", err)\n\t\t\tos.Exit(1)\n\t\t}\n\n\t\t// Handle Top-Level Async (Promises)\n\t\tif val != nil && !goja.IsUndefined(val) && !goja.IsNull(val) {\n\t\t\tif obj := val.ToObject(eng.VM); obj != nil {\n\t\t\t\tthen := obj.Get(\"then\")\n\t\t\t\tif then != nil && !goja.IsUndefined(then) {\n\t\t\t\t\tif _, ok := goja.AssertFunction(then); ok {\n\t\t\t\t\t\teng.EventLoop.WGAdd(1)\n\t\t\t\t\t\tdone := eng.VM.ToValue(func(goja.FunctionCall) goja.Value {\n\t\t\t\t\t\t\teng.EventLoop.WGDone()\n\t\t\t\t\t\t\treturn goja.Undefined()\n\t\t\t\t\t\t})\n\t\t\t\t\t\tthenFn, _ := goja.AssertFunction(then)\n\t\t\t\t\t\t_, _ = thenFn(val, done, done)\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t})\n\n\teng.EventLoop.Start()\n}\n"
+const ShimTemplate = `package main
+
+import (
+	"fmt"
+	"os"
+
+	%[1]s
+
+	"github.com/dop251/goja"
+	"github.com/repyh3/typego/bridge/polyfills"
+	"github.com/repyh3/typego/engine"
+)
+
+const jsBundle = %[2]s
+
+type NativeTools struct {
+	StartTime string
+}
+
+func (n *NativeTools) GetRuntimeInfo() string {
+	return "TypeGo Standalone v1.0"
+}
+
+func main() {
+	// Use the unified engine which handles ALL module registration
+	eng := engine.NewEngine(%[4]d, nil)
+
+	// Initialize Native Tools
+	tools := &NativeTools{StartTime: "2026-01-20"}
+	_ = eng.BindStruct("native", tools)
+
+	// Node.js Polyfills (Process, Buffer, Timers)
+	polyfills.EnableAll(eng.VM, eng.EventLoop)
+
+	// Hyper-Linker Bindings (Generated)
+	%[3]s
+
+	// Run on EventLoop
+	eng.EventLoop.RunOnLoop(func() {
+		val, err := eng.Run(jsBundle)
+		if err != nil {
+			fmt.Printf("Runtime Error: %%v\n", err)
+			os.Exit(1)
+		}
+
+		// Handle Top-Level Async (Promises)
+		if val != nil && !goja.IsUndefined(val) && !goja.IsNull(val) {
+			if obj := val.ToObject(eng.VM); obj != nil {
+				then := obj.Get("then")
+				if then != nil && !goja.IsUndefined(then) {
+					if _, ok := goja.AssertFunction(then); ok {
+						eng.EventLoop.WGAdd(1)
+						done := eng.VM.ToValue(func(goja.FunctionCall) goja.Value {
+							eng.EventLoop.WGDone()
+							return goja.Undefined()
+						})
+						thenFn, _ := goja.AssertFunction(then)
+						_, _ = thenFn(val, done, done)
+					}
+				}
+			}
+		}
+	})
+
+	eng.EventLoop.Start()
+}
+`

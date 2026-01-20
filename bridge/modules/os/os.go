@@ -1,4 +1,5 @@
-package bridge
+// Package os provides bindings for Go's os package.
+package os
 
 import (
 	"fmt"
@@ -7,26 +8,38 @@ import (
 	"strings"
 
 	"github.com/dop251/goja"
+	"github.com/repyh3/typego/bridge/core"
+	"github.com/repyh3/typego/eventloop"
 )
 
-// OSModule implements the go/os package
-type OSModule struct {
+func init() {
+	core.RegisterModule(&osModule{})
+}
+
+type osModule struct{}
+
+func (m *osModule) Name() string {
+	return "go:os"
+}
+
+func (m *osModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
+	Register(vm)
+}
+
+// Module implements the go:os package bindings.
+type Module struct {
 	Root string
 }
 
 // sanitizePath ensures the path is within the root directory and resolves symlinks
-func (m *OSModule) sanitizePath(path string) (string, error) {
-	// 1. Resolve to absolute path
+func (m *Module) sanitizePath(path string) (string, error) {
 	abs, err := filepath.Abs(path)
 	if err != nil {
 		return "", err
 	}
 
-	// 2. Resolve symlinks (The "Anti-Escape")
-	// This prevents pointing a symlink inside the jail to a file outside
 	realPath, err := filepath.EvalSymlinks(abs)
 	if err != nil {
-		// If path doesn't exist, we still check the parent
 		if os.IsNotExist(err) {
 			parentDir := filepath.Dir(abs)
 			realParent, pErr := filepath.EvalSymlinks(parentDir)
@@ -40,13 +53,11 @@ func (m *OSModule) sanitizePath(path string) (string, error) {
 		}
 	}
 
-	// 3. Normalized Rel check
 	rel, err := filepath.Rel(m.Root, realPath)
 	if err != nil {
 		return "", err
 	}
 
-	// If the path starts with ".." it is outside the root
 	if strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
 		return "", os.ErrPermission
 	}
@@ -55,7 +66,7 @@ func (m *OSModule) sanitizePath(path string) (string, error) {
 }
 
 // WriteFile maps to os.WriteFile
-func (m *OSModule) WriteFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
+func (m *Module) WriteFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
 		path := call.Argument(0).String()
 		data := call.Argument(1).String()
@@ -75,7 +86,7 @@ func (m *OSModule) WriteFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Valu
 }
 
 // ReadFile maps to os.ReadFile
-func (m *OSModule) ReadFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
+func (m *Module) ReadFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
 		path := call.Argument(0).String()
 
@@ -93,11 +104,11 @@ func (m *OSModule) ReadFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value
 	}
 }
 
-// RegisterOS injects the os functions into the runtime
-func RegisterOS(vm *goja.Runtime) {
+// Register injects the os functions into the runtime
+func Register(vm *goja.Runtime) {
 	wd, _ := os.Getwd()
 	absRoot, _ := filepath.Abs(wd)
-	m := &OSModule{Root: absRoot}
+	m := &Module{Root: absRoot}
 
 	obj := vm.NewObject()
 	obj.Set("WriteFile", m.WriteFile(vm))

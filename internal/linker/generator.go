@@ -37,8 +37,42 @@ func GenerateShim(info *PackageInfo, variableName string) string {
 func GenerateTypes(info *PackageInfo) string {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("// MODULE: go:%s\n", info.Name))
+	sb.WriteString(fmt.Sprintf("// MODULE: go:%s\n", info.ImportPath))
 	sb.WriteString(fmt.Sprintf("declare module \"go:%s\" {\n", info.ImportPath))
+
+	// Collect imports
+	imports := make(map[string]map[string]bool) // pkgPath -> typeName -> bool
+	for _, st := range info.Structs {
+		for _, field := range st.Fields {
+			if field.ImportPath != "" && field.ImportPath != info.ImportPath {
+				if imports[field.ImportPath] == nil {
+					imports[field.ImportPath] = make(map[string]bool)
+				}
+				// Extract type name from Go type (e.g. "*http.Client" -> "Client")
+				typeName := field.Type
+				if idx := strings.LastIndex(typeName, "."); idx != -1 {
+					typeName = typeName[idx+1:]
+				}
+				typeName = strings.TrimPrefix(typeName, "*")
+				// Remove array brackets if present
+				typeName = strings.ReplaceAll(typeName, "[]", "")
+
+				imports[field.ImportPath][typeName] = true
+			}
+		}
+	}
+
+	// Generate import statements
+	for pkgPath, types := range imports {
+		var typeList []string
+		for t := range types {
+			typeList = append(typeList, t)
+		}
+		sb.WriteString(fmt.Sprintf("\timport { %s } from \"go:%s\";\n", strings.Join(typeList, ", "), pkgPath))
+	}
+	if len(imports) > 0 {
+		sb.WriteString("\n")
+	}
 
 	for _, st := range info.Structs {
 		sb.WriteString(generateStructInterface(st))
@@ -49,7 +83,7 @@ func GenerateTypes(info *PackageInfo) string {
 	}
 
 	sb.WriteString("}\n")
-	sb.WriteString(fmt.Sprintf("// END: go:%s\n", info.Name))
+	sb.WriteString(fmt.Sprintf("// END: go:%s\n", info.ImportPath))
 	return sb.String()
 }
 
@@ -64,10 +98,22 @@ func generateStructInterface(st ExportedStruct) string {
 		sb.WriteString("\t */\n")
 	}
 
-	sb.WriteString(fmt.Sprintf("\texport interface %s {\n", st.Name))
+	// Format interface name with generics: export interface Box<T> {
+	interfaceName := st.Name
+	if len(st.TypeParams) > 0 {
+		interfaceName += "<" + strings.Join(st.TypeParams, ", ") + ">"
+	}
+	sb.WriteString(fmt.Sprintf("\texport interface %s {\n", interfaceName))
 
 	for _, field := range st.Fields {
-		sb.WriteString(fmt.Sprintf("\t\t%s: %s;\n", field.Name, field.TSType))
+		tsType := field.TSType
+		// If imported, strip the package prefix
+		if field.ImportPath != "" {
+			if idx := strings.LastIndex(tsType, "."); idx != -1 {
+				tsType = tsType[idx+1:]
+			}
+		}
+		sb.WriteString(fmt.Sprintf("\t\t%s: %s;\n", field.Name, tsType))
 	}
 
 	for _, method := range st.Methods {
@@ -85,7 +131,13 @@ func generateMethodSignature(m MethodInfo) string {
 		if name == "" {
 			name = fmt.Sprintf("arg%d", i)
 		}
-		args = append(args, fmt.Sprintf("%s: %s", name, GoToTSType(arg.Type)))
+
+		tsType := GoToTSType(arg.Type)
+		if strings.HasPrefix(arg.Type, "...") {
+			name = "..." + name
+		}
+
+		args = append(args, fmt.Sprintf("%s: %s", name, tsType))
 	}
 
 	retType := "void"
@@ -130,9 +182,43 @@ func generateFunctionDecl(fn ExportedFunc) string {
 		if name == "" {
 			name = fmt.Sprintf("arg%d", i)
 		}
-		args = append(args, fmt.Sprintf("%s: %s", name, GoToTSType(arg.Type)))
+
+		tsType := GoToTSType(arg.Type)
+		if strings.HasPrefix(arg.Type, "...") {
+			name = "..." + name
+		}
+
+		args = append(args, fmt.Sprintf("%s: %s", name, tsType))
 	}
 
-	sb.WriteString(fmt.Sprintf("\texport function %s(%s): unknown;\n", fn.Name, strings.Join(args, ", ")))
+	retType := "void"
+
+	// Goja runtime behavior:
+	// - If (T, error), returns T or throws exception
+	// - If (T1, T2, error), returns [T1, T2] or throws exception
+	// - If method (via reflection.go), returns [T, Error] always
+
+	// Create a copy of returns to manipulate
+	returns := make([]string, len(fn.Ret))
+	copy(returns, fn.Ret)
+
+	// If last return is error, drop it (Goja throws it)
+	if len(returns) > 0 && returns[len(returns)-1] == "error" {
+		returns = returns[:len(returns)-1]
+	}
+
+	if len(returns) > 0 {
+		if len(returns) == 1 {
+			retType = GoToTSType(returns[0])
+		} else {
+			var types []string
+			for _, r := range returns {
+				types = append(types, GoToTSType(r))
+			}
+			retType = "[" + strings.Join(types, ", ") + "]"
+		}
+	}
+
+	sb.WriteString(fmt.Sprintf("\texport function %s(%s): %s;\n", fn.Name, strings.Join(args, ", "), retType))
 	return sb.String()
 }
