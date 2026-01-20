@@ -1,49 +1,38 @@
-# TypeGo Showcase 🚀
+# TypeGo Examples
 
-This directory contains examples that demonstrate the core capabilities and security features of the TypeGo runtime.
+Demonstration scripts showcasing TypeGo's core features.
 
-## Run Examples
-
-You can run any of these examples using the TypeGo CLI:
+## Usage
 
 ```bash
 typego run examples/<filename>.ts
 ```
 
-For examples involving memory limits:
+With memory limit:
 ```bash
 typego run examples/04-secure-network.ts -M 256
 ```
 
----
+## Examples
 
-## Showcase Scripts
+| File | Description |
+|------|-------------|
+| `01-hello-world.ts` | Basic TypeScript execution and output |
+| `02-go-concurrency.ts` | `Spawn` and async `Sleep` for parallelism |
+| `03-multithreading-workers.ts` | Worker API with shared memory |
+| `04-secure-network.ts` | HTTP fetch with timeouts and size limits |
+| `05-secure-fs.ts` | Sandboxed file system access |
+| `06-process-env.ts` | Filtered environment variables |
+| `07-struct-binding.ts` | Go struct field/method access |
+| `08-external-module.ts` | Third-party Go package imports |
+| `09-nested-structs.ts` | Complex nested struct handling |
+| `10-typego-stdlib.ts` | Native `typego:memory` and `typego:worker` |
 
-### 1. `01-hello-world.ts`
-The basic "Hello World" demonstrating TypeScript compilation, type safety, and standard output bridging.
+## NPM Dependencies
 
-### 2. `02-go-concurrency.ts`
-Demonstrates how TypeGo leverages Go's concurrency. Includes `Spawn` for background tasks and asynchronous `Sleep`.
+Some examples use NPM packages. Install with:
 
-### 3. `03-multithreading-workers.ts`
-Showcases high-performance multi-threading using the **Worker API** and **SharedArrayBuffer** equivalents for zero-copy state sharing between Go and JS.
-
-### 4. `04-secure-network.ts`
-Demonstrates the hardened HTTP bridge. Showcases:
-- 30s timeouts.
-- 50MB response size limits.
-- Promise-based `Fetch` API.
-
-### 5. `05-secure-fs.ts`
-Demonstrates the **Secure Sandbox (The Vault)**. Showcases how File System access is jailed to the workspace root and protected against symlink-based escapes.
-
-### 6. `06-process-env.ts`
-Showcases the security-filtered environment variables. Demonstrates how sensitive information (like `AWS_SECRET`) is automatically stripped, while whitelisted variables (like `PATH`) are preserved.
-
----
-
-## Advanced: The Cluster Demo
-The `examples/cluster` directory contains a full-scale demonstration of:
-- A hybrid Go/TypeScript HTTP server.
-- Worker pools for intensive computation.
-- Shared mutexes and state across workers.
+```bash
+cd examples
+npm install
+```
