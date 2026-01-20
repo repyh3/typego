@@ -66,7 +66,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/).
 | :--- | :--- |
 | `cmd/typego` | The CLI entry point (`main`, `run`, `build`). |
 | `engine/` | Core Goja runtime wrapper and EventLoop. |
-| `bridge/` | **The Critical Layer**. Bindings between Go and JS. |
+| `bridge/` | Bindings between Go and JS. |
 | `compiler/` | ESBuild wrapper containing the **Cache** logic. |
 | `tests/integration/` | Verifies `bridge` modules function correctly in JS. |
 | `tests/e2e/` | Verifies the CLI binary compiles user apps correctly. |
