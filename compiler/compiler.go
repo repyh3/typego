@@ -40,7 +40,7 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 
 						// Check for core modules and redirect to internal namespace
 						switch args.Path {
-						case "go:fmt", "go:os", "go:sync", "go:net/http", "go:memory":
+						case "go:fmt", "go:os", "go:sync", "go:net/http", "go:memory", "go:crypto":
 							return api.OnResolveResult{Path: args.Path, Namespace: "typego-internal"}, nil
 						}
 
@@ -78,6 +78,8 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 							content = "const h = (globalThis as any).__go_http__; export const Get = h.Get; export const Fetch = h.Fetch; export const Post = h.Post; export const ListenAndServe = h.ListenAndServe;"
 						case "go/sync", "go:sync":
 							content = "const s = (globalThis as any).__go_sync__; export const Spawn = s.Spawn; export const Sleep = s.Sleep; export const Chan = (globalThis as any).Chan;"
+						case "go/crypto", "go:crypto":
+							content = "const c = (globalThis as any).__go_crypto__; export const Sha256 = c.Sha256; export const Sha512 = c.Sha512; export const HmacSha256 = c.HmacSha256; export const HmacSha256Verify = c.HmacSha256Verify; export const RandomBytes = c.RandomBytes; export const Uuid = c.Uuid;"
 						// New TypeGo Stdlib
 						case "typego:memory":
 							content = "const m = (globalThis as any).__typego_memory__; export const makeShared = m.makeShared; export const stats = m.stats; export const ptr = m.ptr;"

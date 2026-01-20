@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/repyh3/typego/bridge/core"
+	bridge_crypto "github.com/repyh3/typego/bridge/modules/crypto"
 	bridge_net "github.com/repyh3/typego/bridge/modules/net"
 	bridge_sync "github.com/repyh3/typego/bridge/modules/sync"
 	bridge_memory "github.com/repyh3/typego/bridge/stdlib/memory"
@@ -105,7 +106,7 @@ var typesCmd = &cobra.Command{
 		// Generate types for each unique import
 		for imp := range goImports {
 			// Skip modules that are already fully defined in std.d.ts
-			if imp == "go:net/http" || imp == "go:sync" || imp == "typego:memory" || imp == "typego:worker" || imp == "go:memory" {
+			if imp == "go:net/http" || imp == "go:sync" || imp == "typego:memory" || imp == "typego:worker" || imp == "go:memory" || imp == "go:crypto" {
 				continue
 			}
 
@@ -167,6 +168,7 @@ var typesCmd = &cobra.Command{
 		currentContent = updateTypeBlock(currentContent, "go:memory", string(bridge_memory.Types))
 		currentContent = updateTypeBlock(currentContent, "typego:memory", string(bridge_memory.Types))
 		currentContent = updateTypeBlock(currentContent, "typego:worker", string(bridge_worker.Types))
+		currentContent = updateTypeBlock(currentContent, "go:crypto", string(bridge_crypto.Types))
 
 		if err := os.WriteFile(dtsPath, currentContent, 0644); err != nil {
 			fmt.Printf("Error writing types: %v\n", err)
