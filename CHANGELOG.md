@@ -2,14 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [v1.2.1] - Unreleased
+## [v1.3.0] - 2026-01-20
 
 ### Added
-- Phase 1 Foundation: `Makefile`, CI/CD Pipeline (`test.yml`), `CONTRIBUTING.md`.
-- Documentation: `OPTIMIZATION.md` for performance guidelines.
+- **Bindings**: `go:encoding/json`, `go:os` (Getenv, Exit, etc.), `go:crypto/*` (Sha256, Hmac, Rand).
+- **HTTP Server**: `ListenAndServe` with JS callback, `Request`/`Response` objects, and `Post`.
+- **Developer Experience**: `typego dev` command with hot-reload and colored output.
+- **Cross-Compilation**: `typego build --target` support for Linux, macOS, and Windows.
+- **Runtime**: Context support and graceful shutdown via `server.close()`.
 
 ## [v1.2.0] - 2026-01-20
 

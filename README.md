@@ -50,8 +50,10 @@ typego run src/index.ts
 | Command | Description |
 |---------|-------------|
 | `typego run <file>` | Execute TypeScript (fast interpreter mode) |
+| `typego dev <file>` | Development server with hot-reload |
 | `typego run --compile <file>` | Compile and run as standalone binary |
-| `typego build <file> -o <output>` | Build standalone executable |
+| `typego build <file> -o <out>` | Build standalone executable |
+| `typego build <file> --target` | Cross-compile (e.g. linux-amd64) |
 | `typego types` | Generate `.d.ts` for Go imports |
 | `typego init <name>` | Scaffold new project |
 
