@@ -34,7 +34,7 @@ We follow a strict **Feature Branch** workflow. Direct commits to `main` are blo
 
 ## Pull Request Guidelines
 
-To ensure rapid review and merging, please adhere to these rules:
+To ensure rapid review and merging, please adhere to these rules. For a detailed breakdown of our branching strategy, see **[GIT_WORKFLOW.md](GIT_WORKFLOW.md)**.
 
 ### 1. Branch Naming Strategy
 | Prefix | Use Case | Example |
@@ -72,8 +72,3 @@ We use [Conventional Commits](https://www.conventionalcommits.org/).
 | `tests/e2e/` | Verifies the CLI binary compiles user apps correctly. |
 
 ---
-
-## Need Help?
-If you're unsure about an implementation detail:
-1. Check `TESTING_STRATEGY.md` for architectural context.
-2. Open an Issue with the label `question`.
