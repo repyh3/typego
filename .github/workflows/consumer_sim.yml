@@ -28,9 +28,11 @@ jobs:
           
           # 1. Background Worker Script
           cat <<EOF > worker.ts
-          import { onmessage, postMessage } from "typego:worker";
           import { Println } from "go:fmt";
           
+          declare var onmessage: (msg: any) => void;
+          declare function postMessage(msg: any): void;
+
           onmessage = (msg) => {
               Println("[Worker] Processing task: " + msg.data.id);
               // simulate work
