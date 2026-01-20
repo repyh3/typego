@@ -23,14 +23,34 @@ import (
 
 var ErrMemoryLimitExceeded = errors.New("memory limit exceeded")
 
+// ErrorHandler is a callback for unhandled errors in the engine
+type ErrorHandler func(err error, stack string)
+
 type Engine struct {
 	VM            *goja.Runtime
 	MemoryLimit   uint64
 	EventLoop     *eventloop.EventLoop
 	MemoryFactory *memory.Factory
 
+	// OnError is called when an unhandled error occurs in the engine
+	OnError ErrorHandler
+
 	ctx    context.Context
 	cancel context.CancelFunc
+}
+
+// WrapError converts a Go error or panic into a JS Error with stack trace
+func (e *Engine) WrapError(recovered interface{}) error {
+	switch v := recovered.(type) {
+	case *goja.Exception:
+		return v
+	case error:
+		return fmt.Errorf("runtime error: %w", v)
+	case string:
+		return fmt.Errorf("runtime error: %s", v)
+	default:
+		return fmt.Errorf("runtime error: %v", v)
+	}
 }
 
 func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
@@ -73,6 +93,32 @@ func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
 
 func (e *Engine) Run(js string) (goja.Value, error) {
 	return e.VM.RunString(js)
+}
+
+// RunSafe executes JS code with panic recovery. If a panic occurs, it is
+// converted to an error and passed to OnError if set.
+func (e *Engine) RunSafe(js string) (result goja.Value, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = e.WrapError(r)
+			if e.OnError != nil {
+				e.OnError(err, e.getStack())
+			}
+		}
+	}()
+	return e.VM.RunString(js)
+}
+
+// getStack returns the current Go stack trace for debugging
+func (e *Engine) getStack() string {
+	buf := make([]byte, 4096)
+	n := runtime.Stack(buf, false)
+	return string(buf[:n])
+}
+
+// Context returns the engine's context for cancellation
+func (e *Engine) Context() context.Context {
+	return e.ctx
 }
 
 func (e *Engine) GlobalSet(name string, value interface{}) error {
