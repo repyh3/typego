@@ -30,10 +30,10 @@ jobs:
           cat <<EOF > worker.ts
           import { Println } from "go:fmt";
           
-          declare var onmessage: (msg: any) => void;
+          declare var self: any;
           declare function postMessage(msg: any): void;
 
-          onmessage = (msg) => {
+          self.onmessage = (msg: any) => {
               Println("[Worker] Processing task: " + msg.data.id);
               // simulate work
               postMessage({ status: "done", id: msg.data.id });
@@ -120,7 +120,7 @@ jobs:
       - name: Verify Build (Binary)
         run: |
           cd ~/task-manager
-          typego build -o task-server .
+          typego build -o task-server main.ts
           
           # Execute binary
           ./task-server &
