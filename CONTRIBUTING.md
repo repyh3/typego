@@ -73,7 +73,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/).
 
 ---
 
-## ❓ Need Help?
+## Need Help?
 If you're unsure about an implementation detail:
 1. Check `TESTING_STRATEGY.md` for architectural context.
 2. Open an Issue with the label `question`.
