@@ -18,7 +18,7 @@ func TestBridge_Http_Fetch(t *testing.T) {
 
 	// 2. JS Code to fetch from local server
 	// We inject the server URL into the JS environment
-	harness.Engine.GlobalSet("TEST_URL", ts.URL)
+	_ = harness.Engine.GlobalSet("TEST_URL", ts.URL)
 
 	harness.Run(t, `
 		const http = __go_http__;

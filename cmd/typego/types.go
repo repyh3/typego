@@ -12,8 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var typesFile string
-
 var typesCmd = &cobra.Command{
 	Use:   "types [file]",
 	Short: "Sync and update TypeGo ambient definitions",
@@ -97,10 +95,7 @@ declare module "go:*" {
 		goImports := make(map[string]bool)
 		for file := range fileSet {
 			fmt.Printf("🔍 Scanning %s...\n", filepath.Base(file))
-			res, err := compiler.Compile(file, nil)
-			if err != nil {
-				// Silently skip - expected during broad scan of potentially non-entrypoint files
-			}
+			res, _ := compiler.Compile(file, nil)
 			if res != nil {
 				for _, imp := range res.Imports {
 					if strings.HasPrefix(imp, "go:") || strings.HasPrefix(imp, "typego:") {

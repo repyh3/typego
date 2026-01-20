@@ -82,7 +82,7 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 	_ = obj.Set("Spawn", m.Spawn)
 	_ = obj.Set("Sleep", m.Sleep)
 
-	vm.Set("Chan", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("Chan", func(call goja.ConstructorCall) *goja.Object {
 		ch := make(chan goja.Value, 100)
 		res := vm.NewObject()
 		_ = res.Set("send", func(c goja.FunctionCall) goja.Value {

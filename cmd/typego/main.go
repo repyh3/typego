@@ -15,8 +15,7 @@ var rootCmd = &cobra.Command{
 	Long: `A high-performance TypeScript runtime built on Go, enabling 
 developers to harness Go's concurrency and memory efficiency while writing TypeScript.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Default action if no subcommand is provided
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 

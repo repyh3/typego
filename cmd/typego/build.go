@@ -57,9 +57,7 @@ var buildCmd = &cobra.Command{
 					cleanImp := imp[3:]
 
 					fmt.Printf("🔍 Inspecting %s...\n", cleanImp)
-					if err := fetcher.Get(cleanImp); err != nil {
-						// Fallback: It might be stdlib, ignore error for now
-					}
+					_ = fetcher.Get(cleanImp)
 
 					info, err := linker.Inspect(cleanImp, fetcher.TempDir)
 					if err != nil {
@@ -137,7 +135,7 @@ go 1.23.6
 			fmt.Println("🔧 typego dev mode: using local source replacement")
 			replaceCmd := exec.Command("go", "mod", "edit", "-replace", "github.com/repyh3/typego="+absCwd)
 			replaceCmd.Dir = tmpDir
-			replaceCmd.Run()
+			_ = replaceCmd.Run()
 		}
 
 		// Fetch all required typego packages
@@ -163,7 +161,7 @@ go 1.23.6
 			} else {
 				getCmd.Env = append(os.Environ(), "GOPROXY=direct")
 			}
-			getCmd.Run()
+			_ = getCmd.Run()
 		}
 
 		// 5. Build Binary

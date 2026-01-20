@@ -128,7 +128,7 @@ func runStandalone(filename string) {
 
 go 1.23.6
 `
-	os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(goModContent), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(goModContent), 0644)
 
 	// Point to local TypeGo source ONLY if we are in the repo (Dev Mode)
 	// Otherwise, use the published version
@@ -145,7 +145,7 @@ go 1.23.6
 		fmt.Println("🔧 typego dev mode: using local source replacement")
 		replaceCmd := exec.Command("go", "mod", "edit", "-replace", "github.com/repyh3/typego="+absCwd)
 		replaceCmd.Dir = tmpDir
-		replaceCmd.Run()
+		_ = replaceCmd.Run()
 	}
 
 	// Fetch dependencies (only root package needed, engine pulls in all subpackages)

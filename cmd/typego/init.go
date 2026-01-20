@@ -56,12 +56,12 @@ var initCmd = &cobra.Command{
 
 		indexPath := filepath.Join("src", "index.ts")
 		if _, err := os.Stat(indexPath); os.IsNotExist(err) {
-			os.WriteFile(indexPath, []byte(indexTemplate), 0644)
+			_ = os.WriteFile(indexPath, []byte(indexTemplate), 0644)
 			fmt.Println("Created src/index.ts")
 		}
 
 		if _, err := os.Stat("tsconfig.json"); os.IsNotExist(err) {
-			os.WriteFile("tsconfig.json", []byte(tsConfigTemplate), 0644)
+			_ = os.WriteFile("tsconfig.json", []byte(tsConfigTemplate), 0644)
 			fmt.Println("Created tsconfig.json")
 		}
 
@@ -86,7 +86,7 @@ var initCmd = &cobra.Command{
 			target := filepath.Join(curr, "go.d.ts")
 			masterDts, err := os.ReadFile(target)
 			if err == nil {
-				os.WriteFile(dtsPath, masterDts, 0644)
+				_ = os.WriteFile(dtsPath, masterDts, 0644)
 				fmt.Printf("Synced %s from %s\n", dtsPath, target)
 				found = true
 				break

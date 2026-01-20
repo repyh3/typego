@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/dop251/goja"
 	"github.com/repyh3/typego/bridge/stdlib/worker"
@@ -14,7 +13,6 @@ type WorkerInstance struct {
 	engine *Engine
 	inbox  chan interface{}
 	stop   chan struct{}
-	wg     sync.WaitGroup
 }
 
 func (w *WorkerInstance) PostMessage(msg goja.Value) {
@@ -71,7 +69,7 @@ func (e *Engine) SpawnWorker(scriptPath string, onMessage func(goja.Value)) (wor
 					if onMsg := workerEng.VM.GlobalObject().Get("onmessage"); onMsg != nil {
 						if fn, ok := goja.AssertFunction(onMsg); ok {
 							event := workerEng.VM.NewObject()
-							event.Set("data", val)
+							_ = event.Set("data", val)
 							_, _ = fn(workerEng.VM.GlobalObject(), event)
 						}
 					}
