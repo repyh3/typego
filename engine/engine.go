@@ -67,6 +67,7 @@ func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
 
 	// Core modules (special dependencies)
 	core.RegisterConsole(vm)
+	core.RegisterGlobals(vm)
 	// Register new stdlib modules
 	memory.Register(vm, el, mf)
 
