@@ -16,6 +16,16 @@ import (
 
 var buildOut string
 var minify bool
+var buildTarget string
+
+// Supported cross-compilation targets
+var supportedTargets = map[string]struct{ goos, goarch string }{
+	"linux-amd64":   {"linux", "amd64"},
+	"linux-arm64":   {"linux", "arm64"},
+	"darwin-amd64":  {"darwin", "amd64"},
+	"darwin-arm64":  {"darwin", "arm64"},
+	"windows-amd64": {"windows", "amd64"},
+}
 
 var buildCmd = &cobra.Command{
 	Use:   "build [file]",
@@ -189,6 +199,24 @@ go 1.23.6
 		buildCmd.Stdout = os.Stdout
 		buildCmd.Stderr = os.Stderr
 
+		// Cross-compilation support
+		env := os.Environ()
+		if buildTarget != "" {
+			if target, ok := supportedTargets[buildTarget]; ok {
+				fmt.Printf("🎯 Targeting %s/%s...\n", target.goos, target.goarch)
+				env = append(env, "GOOS="+target.goos, "GOARCH="+target.goarch)
+				// Ensure CGO is disabled for cross-compilation unless explicitly needed
+				env = append(env, "CGO_ENABLED=0")
+			} else {
+				fmt.Printf("Error: Unsupported target '%s'. Available targets:\n", buildTarget)
+				for t := range supportedTargets {
+					fmt.Printf("  - %s\n", t)
+				}
+				os.Exit(1)
+			}
+		}
+		buildCmd.Env = env
+
 		if err := buildCmd.Run(); err != nil {
 			fmt.Printf("Compilation failed: %v\n", err)
 			os.Exit(1)
@@ -201,5 +229,6 @@ go 1.23.6
 func init() {
 	buildCmd.Flags().StringVarP(&buildOut, "out", "o", "dist/index.js", "Output bundle path")
 	buildCmd.Flags().BoolVarP(&minify, "minify", "m", false, "Minify output")
+	buildCmd.Flags().StringVarP(&buildTarget, "target", "t", "", "Cross-compilation target (e.g. linux-amd64)")
 	rootCmd.AddCommand(buildCmd)
 }
