@@ -14,6 +14,7 @@ type EventLoop struct {
 	wg       sync.WaitGroup
 	running  bool
 	mu       sync.Mutex
+	autoStop bool
 }
 
 // NewEventLoop creates a new event loop for a goja runtime
@@ -22,7 +23,15 @@ func NewEventLoop(vm *goja.Runtime) *EventLoop {
 		VM:       vm,
 		jobQueue: make(chan func(), 100),
 		stopChan: make(chan struct{}),
+		autoStop: true, // Default to enabled for backward compatibility
 	}
+}
+
+// SetAutoStop controls whether the loop shuts down automatically when idle
+func (el *EventLoop) SetAutoStop(enable bool) {
+	el.mu.Lock()
+	defer el.mu.Unlock()
+	el.autoStop = enable
 }
 
 // Start runs the event loop. It blocks until the loop is stopped or all tasks are done.
@@ -33,13 +42,16 @@ func (el *EventLoop) Start() {
 		return
 	}
 	el.running = true
+	shouldAutoStop := el.autoStop
 	el.mu.Unlock()
 
 	// Shutdown when no more tasks are pending
-	go func() {
-		el.wg.Wait()
-		el.Stop()
-	}()
+	if shouldAutoStop {
+		go func() {
+			el.wg.Wait()
+			el.Stop()
+		}()
+	}
 
 	for {
 		select {

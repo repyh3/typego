@@ -123,6 +123,23 @@ go 1.23.6
 			os.Exit(1)
 		}
 
+		// Detect Dev Mode
+		cwd, _ := os.Getwd()
+		absCwd, _ := filepath.Abs(cwd)
+		isLocalDev := false
+		if data, err := os.ReadFile(filepath.Join(absCwd, "go.mod")); err == nil {
+			if strings.Contains(string(data), "module github.com/repyh3/typego") {
+				isLocalDev = true
+			}
+		}
+
+		if isLocalDev {
+			fmt.Println("🔧 typego dev mode: using local source replacement")
+			replaceCmd := exec.Command("go", "mod", "edit", "-replace", "github.com/repyh3/typego="+absCwd)
+			replaceCmd.Dir = tmpDir
+			replaceCmd.Run()
+		}
+
 		// Fetch all required typego packages
 		packages := []string{
 			"github.com/repyh3/typego/bridge",
@@ -132,9 +149,20 @@ go 1.23.6
 			"github.com/dop251/goja",
 		}
 		for _, pkg := range packages {
-			getCmd := exec.Command("go", "get", pkg+"@latest")
+			// If local dev, we don't want @latest for our own packages, but they are replaced anyway.
+			// However, go get might complain if version is missing.
+			// Let's just use go get without version, let go.mod handle it via replacement.
+			target := pkg
+			if !isLocalDev {
+				target = pkg + "@latest"
+			}
+			getCmd := exec.Command("go", "get", target)
 			getCmd.Dir = tmpDir
-			getCmd.Env = append(os.Environ(), "GOPROXY=direct")
+			if isLocalDev {
+				getCmd.Env = append(os.Environ(), "GOPROXY=off") // Force local
+			} else {
+				getCmd.Env = append(os.Environ(), "GOPROXY=direct")
+			}
 			getCmd.Run()
 		}
 

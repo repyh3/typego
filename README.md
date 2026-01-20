@@ -4,12 +4,12 @@
 
 typego is an embedded TypeScript runtime for Go. It lets you script Go applications with TS without the overhead of Node.js or the boilerplate of manual FFI bindings.
 
-[Getting Started](#getting-started) • [Features](#features) • [Examples](#examples) • [Optimization](OPTIMIZATION.md) • [License](#license)
+[Getting Started](#getting-started) • [Features](#features) • [Examples](#examples) • [Optimization](OPTIMIZATION.md) • [Contributing](CONTRIBUTING.md) • [License](#license)
 
 </div>
 
-> [!WARNING]
-> **Proof of Concept**: This project is experimental and not intended for production use. Maintenance is sporadic. You are encouraged to fork and extend!
+> [!NOTE]
+> **Project Status**: TypeGo is under active development. However, please note that **maintenance is limited** as I am balancing this project with my university commitments. Issues and PRs are welcome but may see delayed responses.
 
 Unlike typical runtimes that communicate over IPC or JSON-RPC, typego runs a JS engine (Goja) directly inside your Go process. You can import Go packages as if they were native TS modules using the go: prefix, allowing for zero-copy data sharing and direct access to Go’s standard library.
 

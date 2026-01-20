@@ -13,6 +13,13 @@ type Result struct {
 }
 
 func Compile(entryPoint string, virtualModules map[string]string) (*Result, error) {
+	// 1. Try Cache (only if no virtual modules are forced, which implies dynamic requirements)
+	if len(virtualModules) == 0 {
+		if res, err := CheckCache(entryPoint); err == nil && res != nil {
+			return res, nil
+		}
+	}
+
 	var collectedImports []string
 
 	result := api.Build(api.BuildOptions{
@@ -104,6 +111,11 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 
 	if res.JS == "" && len(result.OutputFiles) > 0 {
 		res.JS = string(result.OutputFiles[0].Contents)
+	}
+
+	// Save to cache
+	if len(virtualModules) == 0 {
+		_ = SaveCache(entryPoint, res)
 	}
 
 	return res, nil
