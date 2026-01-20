@@ -61,7 +61,9 @@ func (s *Server) ListenAndServe(addr string, handler goja.Callable) error {
 	}
 
 	// Start server in background
+	s.el.WGAdd(1)
 	go func() {
+		defer s.el.WGDone()
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Printf("HTTP server error: %v\n", err)
 		}

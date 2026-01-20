@@ -75,7 +75,7 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 						case "go/os", "go:os":
 							content = "const o = (globalThis as any).__go_os__; export const WriteFile = o.WriteFile; export const ReadFile = o.ReadFile;"
 						case "go/net/http", "go:net/http":
-							content = "const h = (globalThis as any).__go_http__; export const Get = h.Get; export const Fetch = h.Fetch;"
+							content = "const h = (globalThis as any).__go_http__; export const Get = h.Get; export const Fetch = h.Fetch; export const Post = h.Post; export const ListenAndServe = h.ListenAndServe;"
 						case "go/sync", "go:sync":
 							content = "const s = (globalThis as any).__go_sync__; export const Spawn = s.Spawn; export const Sleep = s.Sleep; export const Chan = (globalThis as any).Chan;"
 						// New TypeGo Stdlib

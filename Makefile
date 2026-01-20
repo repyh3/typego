@@ -17,6 +17,9 @@ build:
 test:
 	$(GOTEST) -v -race ./...
 
+test-dx:
+	$(GOTEST) -v ./tests/dx/...
+
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
