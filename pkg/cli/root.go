@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/repyh/typego/pkg/cli/pkg"
 	"github.com/spf13/cobra"
 )
 
@@ -21,6 +22,13 @@ developers to harness Go's concurrency and memory efficiency while writing TypeS
 
 func init() {
 	RootCmd.PersistentFlags().Uint64VarP(&MemoryLimit, "memory-limit", "M", 128, "Memory limit for the JS engine in MB")
+
+	// Package manager commands
+	RootCmd.AddCommand(pkg.AddCmd)
+	RootCmd.AddCommand(pkg.RemoveCmd)
+	RootCmd.AddCommand(pkg.ListCmd)
+	RootCmd.AddCommand(pkg.InstallCmd)
+	RootCmd.AddCommand(pkg.CleanCmd)
 }
 
 func Execute() {

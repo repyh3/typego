@@ -1,4 +1,4 @@
-package cli
+package pkg
 
 import (
 	"fmt"
@@ -6,10 +6,11 @@ import (
 	"path/filepath"
 
 	"github.com/repyh/typego/internal/ecosystem"
+	"github.com/repyh/typego/pkg/cli/internal"
 	"github.com/spf13/cobra"
 )
 
-var cleanCmd = &cobra.Command{
+var CleanCmd = &cobra.Command{
 	Use:   "clean",
 	Short: "Clean the ecosystem cache",
 	Long:  `Remove the .typego directory and all cached binaries/dependencies.`,
@@ -18,19 +19,15 @@ var cleanCmd = &cobra.Command{
 		path := filepath.Join(cwd, ecosystem.HiddenDirName)
 
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			fmt.Println("✨ Cache already clean")
+			internal.Success("Cache already clean")
 			return
 		}
 
-		fmt.Printf("🧹 Cleaning %s...\n", path)
+		internal.Step("🧹", fmt.Sprintf("Cleaning %s...", path))
 		if err := os.RemoveAll(path); err != nil {
-			fmt.Printf("❌ Failed to clean: %v\n", err)
+			internal.Error(fmt.Sprintf("Failed to clean: %v", err))
 			os.Exit(1)
 		}
-		fmt.Println("✨ Cache wiped successfully")
+		internal.Success("Cache wiped successfully")
 	},
-}
-
-func init() {
-	RootCmd.AddCommand(cleanCmd)
 }
