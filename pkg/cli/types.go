@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -180,7 +180,7 @@ var typesCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(typesCmd)
+	RootCmd.AddCommand(typesCmd)
 }
 
 func updateTypeBlock(content []byte, moduleName, typeDef string) []byte {

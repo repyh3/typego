@@ -1,0 +1,50 @@
+package ecosystem
+
+import (
+	"fmt"
+	"strings"
+)
+
+// ModuleConfig represents the schema for typego.modules.json
+type ModuleConfig struct {
+	Schema       string            `json:"$schema,omitempty"`
+	Dependencies map[string]string `json:"dependencies"`
+	Replace      map[string]string `json:"replace,omitempty"`
+	Compiler     CompilerConfig    `json:"compiler,omitempty"`
+}
+
+// CompilerConfig holds settings for the Go toolchain
+type CompilerConfig struct {
+	GoVersion string   `json:"goVersion,omitempty"`
+	Tags      []string `json:"tags,omitempty"`
+}
+
+// DefaultConfig returns a standard configuration template
+func DefaultConfig() ModuleConfig {
+	return ModuleConfig{
+		// placeholder for now
+		Schema:       "https://typego.dev/schemas/modules.json",
+		Dependencies: map[string]string{
+			// Example dependency
+			// "github.com/gin-gonic/gin": "v1.9.0",
+		},
+		Compiler: CompilerConfig{
+			GoVersion: "1.24",
+		},
+	}
+}
+
+// Validate checks the configuration for common errors
+func (c *ModuleConfig) Validate() error {
+	for dep := range c.Dependencies {
+		if dep == "" {
+			return fmt.Errorf("dependency path cannot be empty")
+		}
+		// Basic check: module paths usually contain a dot (domain) or are standard lib (which are handled elsewhere, but for go.mod valid paths usually have a dot)
+		// For now, we just ensure it's not empty and doesn't contain spaces.
+		if strings.Contains(dep, " ") {
+			return fmt.Errorf("invalid dependency path %q: cannot contain spaces", dep)
+		}
+	}
+	return nil
+}

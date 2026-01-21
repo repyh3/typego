@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/repyh/typego/compiler"
 	"github.com/repyh/typego/internal/builder"
+	"github.com/repyh/typego/internal/ecosystem"
 	"github.com/repyh/typego/internal/linker"
 	"github.com/spf13/cobra"
 )
@@ -25,6 +26,29 @@ Use --compile to generate a standalone Go binary (slower, but more portable).`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		filename := args[0]
+		cwd, _ := os.Getwd()
+
+		// Attempt JIT Handoff
+		if !compileMode && ecosystem.IsHandoffRequired(cwd) {
+			binaryPath, _ := ecosystem.GetJITBinaryPath(cwd)
+
+			// Call the local binary with same args
+			// We MUST set the handoff env var to true to avoid recursion
+			handoff := exec.Command(binaryPath, os.Args[1:]...)
+			handoff.Stdout = os.Stdout
+			handoff.Stderr = os.Stderr
+			handoff.Stdin = os.Stdin
+			handoff.Env = append(os.Environ(), ecosystem.HandoffEnvVar+"=true")
+
+			if err := handoff.Run(); err != nil {
+				if exitErr, ok := err.(*exec.ExitError); ok {
+					os.Exit(exitErr.ExitCode())
+				}
+				fmt.Printf("Handoff failed: %v\n", err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
 
 		if compileMode {
 			// Standalone compilation mode
@@ -40,7 +64,7 @@ Use --compile to generate a standalone Go binary (slower, but more portable).`,
 }
 
 func init() {
-	rootCmd.AddCommand(runCmd)
+	RootCmd.AddCommand(runCmd)
 	runCmd.Flags().BoolVarP(&compileMode, "compile", "c", false, "Compile to standalone binary (slower)")
 }
 
@@ -117,7 +141,7 @@ func runStandalone(filename string) {
 	}
 
 	// Use shared ShimTemplate from internal/builder
-	shimContent := fmt.Sprintf(builder.ShimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, memoryLimit*1024*1024)
+	shimContent := fmt.Sprintf(builder.ShimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, MemoryLimit*1024*1024)
 	if err := os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(shimContent), 0644); err != nil {
 		fmt.Printf("Error writing shim: %v\n", err)
 		os.Exit(1)

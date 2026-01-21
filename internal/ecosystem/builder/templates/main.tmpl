@@ -1,0 +1,27 @@
+package main
+
+import (
+	"github.com/repyh/typego/pkg/cli"
+	"github.com/repyh/typego/compiler"
+	"github.com/repyh/typego/engine"
+
+	// Bridged external modules
+{{ range $path, $name := .NamedImports }}	{{ $name }} "{{ $path }}"
+{{ end }}
+)
+
+func main() {
+	// Register the shims for the external modules so the compiler knows about them
+	compiler.GlobalVirtualModules = map[string]string{
+{{ range $path, $shim := .Shims }}		"{{ $path }}": `{{ $shim }}`,
+{{ end }}
+	}
+
+	// Register bridge code via engine hook
+	engine.AddGlobalHook(func(eng *engine.Engine) {
+{{ .Bridge }}
+	})
+
+	// Run the standard CLI
+	cli.Execute()
+}

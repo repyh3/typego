@@ -222,3 +222,19 @@ func generateFunctionDecl(fn ExportedFunc) string {
 	sb.WriteString(fmt.Sprintf("\texport function %s(%s): %s;\n", fn.Name, strings.Join(args, ", "), retType))
 	return sb.String()
 }
+
+// GenerateTSShim creates the TypeScript source for the virtual module entry point.
+// This is used by the compiler to resolve imports like "go:github.com/..."
+func GenerateTSShim(info *PackageInfo) string {
+	var sb strings.Builder
+	for _, fn := range info.Exports {
+		sb.WriteString(fmt.Sprintf("export const %s = (globalThis as any)._go_hyper_%s.%s;\n", fn.Name, info.Name, fn.Name))
+	}
+	// Add struct factory functions if any
+	for _, st := range info.Structs {
+		if len(st.Name) > 0 && st.Name[0] >= 'A' && st.Name[0] <= 'Z' {
+			sb.WriteString(fmt.Sprintf("export const New%s = (globalThis as any)._go_hyper_%s.New%s;\n", st.Name, info.Name, st.Name))
+		}
+	}
+	return sb.String()
+}

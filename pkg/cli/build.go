@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -112,7 +112,7 @@ var buildCmd = &cobra.Command{
 			}
 		}
 
-		shimContent := fmt.Sprintf(builder.ShimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, memoryLimit*1024*1024)
+		shimContent := fmt.Sprintf(builder.ShimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, MemoryLimit*1024*1024)
 
 		shimPath := filepath.Join(tmpDir, "main.go")
 		if err := os.WriteFile(shimPath, []byte(shimContent), 0644); err != nil {
@@ -230,5 +230,5 @@ func init() {
 	buildCmd.Flags().StringVarP(&buildOut, "out", "o", "dist/index.js", "Output bundle path")
 	buildCmd.Flags().BoolVarP(&minify, "minify", "m", false, "Minify output")
 	buildCmd.Flags().StringVarP(&buildTarget, "target", "t", "", "Cross-compilation target (e.g. linux-amd64)")
-	rootCmd.AddCommand(buildCmd)
+	RootCmd.AddCommand(buildCmd)
 }

@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/repyh/typego/internal/ecosystem"
 	"github.com/spf13/cobra"
 )
 
@@ -31,6 +32,29 @@ restarts. Provides colored output and compilation timing.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		filename := args[0]
+		cwd, _ := os.Getwd()
+
+		// Attempt JIT Handoff
+		if ecosystem.IsHandoffRequired(cwd) {
+			binaryPath, _ := ecosystem.GetJITBinaryPath(cwd)
+
+			// Call the local binary with same args (dev [file])
+			handoff := exec.Command(binaryPath, os.Args[1:]...)
+			handoff.Stdout = os.Stdout
+			handoff.Stderr = os.Stderr
+			handoff.Stdin = os.Stdin
+			handoff.Env = append(os.Environ(), ecosystem.HandoffEnvVar+"=true")
+
+			if err := handoff.Run(); err != nil {
+				if exitErr, ok := err.(*exec.ExitError); ok {
+					os.Exit(exitErr.ExitCode())
+				}
+				fmt.Printf("Handoff failed: %v\n", err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
+
 		absPath, err := filepath.Abs(filename)
 		if err != nil {
 			printError("Failed to resolve path: %v", err)
@@ -156,5 +180,5 @@ func printError(format string, args ...interface{}) {
 }
 
 func init() {
-	rootCmd.AddCommand(devCmd)
+	RootCmd.AddCommand(devCmd)
 }

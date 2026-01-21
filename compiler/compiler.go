@@ -12,8 +12,26 @@ type Result struct {
 	Imports   []string
 }
 
+// GlobalVirtualModules allow pre-registering modules for JIT binaries
+var GlobalVirtualModules = make(map[string]string)
+
 func Compile(entryPoint string, virtualModules map[string]string) (*Result, error) {
-	// 1. Try Cache (only if no virtual modules are forced, which implies dynamic requirements)
+	// Merge global modules
+	if virtualModules == nil {
+		virtualModules = make(map[string]string)
+	}
+	for k, v := range GlobalVirtualModules {
+		if _, exists := virtualModules[k]; !exists {
+			virtualModules[k] = v
+		}
+	}
+
+	// 1. Try Cache (only if no specific virtual modules are forced, which implies dynamic requirements)
+	// We check if virtualModules contains ONLY global ones to allow caching?
+	// For now, let's assume if we are running standard compile, we might still want cache.
+	// But if virtualModules changed, the cache key should change.
+	// Since SaveCache/CheckCache might not consider virtualModules content, strictly speaking we should be careful.
+	// However, for MVP, let's keep cache logic as is but note valid concern.
 	if len(virtualModules) == 0 {
 		if res, err := CheckCache(entryPoint); err == nil && res != nil {
 			return res, nil
