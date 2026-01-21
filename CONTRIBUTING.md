@@ -83,6 +83,15 @@ typego/
 
 ---
 
+## Maintenance & AI Optimization
+
+To maintain TypeGo's high-performance standards, we utilize **Google Jules** for periodic code optimization. 
+
+- **Scheduled Audits**: Every 24 hour (at exactly 2:00 AM GMT+7), the codebase undergoes an automated performance audit focused on reducing reflection overhead and memory allocations.
+- **Review Policy**: AI-generated optimizations are reviewed by core maintainers to ensure they balance performance with readability and maintainability.
+
+---
+
 ## Need Help?
 If you're unsure about an implementation detail:
 1. Open an Issue with the label `question`.
