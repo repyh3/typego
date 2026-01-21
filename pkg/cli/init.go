@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -40,6 +40,16 @@ async function main() {
 main();
 `
 
+const modulesTemplate = `{
+  "$schema": "https://typego.dev/schemas/modules.json",
+  "dependencies": {
+    // "github.com/gin-gonic/gin": "v1.9.0"
+  },
+  "compiler": {
+    "goVersion": "1.24"
+  }
+}`
+
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize a new TypeGo project",
@@ -58,6 +68,11 @@ var initCmd = &cobra.Command{
 		if _, err := os.Stat(indexPath); os.IsNotExist(err) {
 			_ = os.WriteFile(indexPath, []byte(indexTemplate), 0644)
 			fmt.Println("Created src/index.ts")
+		}
+
+		if _, err := os.Stat("typego.modules.json"); os.IsNotExist(err) {
+			_ = os.WriteFile("typego.modules.json", []byte(modulesTemplate), 0644)
+			fmt.Println("Created typego.modules.json")
 		}
 
 		if _, err := os.Stat("tsconfig.json"); os.IsNotExist(err) {
@@ -110,5 +125,5 @@ func execShellCmd(name string, args ...string) error {
 }
 
 func init() {
-	rootCmd.AddCommand(initCmd)
+	RootCmd.AddCommand(initCmd)
 }

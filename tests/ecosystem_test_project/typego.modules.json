@@ -1,0 +1,9 @@
+{
+    "$schema": "https://typego.dev/schemas/modules.json",
+    "dependencies": {
+        "github.com/fatih/color": "latest"
+    },
+    "compiler": {
+        "goVersion": "1.24"
+    }
+}

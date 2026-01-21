@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/repyh/typego/compiler"
 	"github.com/repyh/typego/internal/builder"
+	"github.com/repyh/typego/internal/ecosystem"
 	"github.com/repyh/typego/internal/linker"
 	"github.com/spf13/cobra"
 )
@@ -25,6 +26,29 @@ Use --compile to generate a standalone Go binary (slower, but more portable).`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		filename := args[0]
+		cwd, _ := os.Getwd()
+
+		// Attempt JIT Handoff
+		if !compileMode && ecosystem.IsHandoffRequired(cwd) {
+			binaryPath, _ := ecosystem.GetJITBinaryPath(cwd)
+
+			// Call the local binary with same args
+			// We MUST set the handoff env var to true to avoid recursion
+			handoff := exec.Command(binaryPath, os.Args[1:]...)
+			handoff.Stdout = os.Stdout
+			handoff.Stderr = os.Stderr
+			handoff.Stdin = os.Stdin
+			handoff.Env = append(os.Environ(), ecosystem.HandoffEnvVar+"=true")
+
+			if err := handoff.Run(); err != nil {
+				if exitErr, ok := err.(*exec.ExitError); ok {
+					os.Exit(exitErr.ExitCode())
+				}
+				fmt.Printf("Handoff failed: %v\n", err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
 
 		if compileMode {
 			// Standalone compilation mode
@@ -40,7 +64,7 @@ Use --compile to generate a standalone Go binary (slower, but more portable).`,
 }
 
 func init() {
-	rootCmd.AddCommand(runCmd)
+	RootCmd.AddCommand(runCmd)
 	runCmd.Flags().BoolVarP(&compileMode, "compile", "c", false, "Compile to standalone binary (slower)")
 }
 
@@ -117,7 +141,7 @@ func runStandalone(filename string) {
 	}
 
 	// Use shared ShimTemplate from internal/builder
-	shimContent := fmt.Sprintf(builder.ShimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, memoryLimit*1024*1024)
+	shimContent := fmt.Sprintf(builder.ShimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, MemoryLimit*1024*1024)
 	if err := os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(shimContent), 0644); err != nil {
 		fmt.Printf("Error writing shim: %v\n", err)
 		os.Exit(1)
@@ -131,19 +155,13 @@ go 1.23.6
 	_ = os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(goModContent), 0644)
 
 	// Point to local TypeGo source ONLY if we are in the repo (Dev Mode)
-	// Otherwise, use the published version
+	// Detect if we are running in the typego repo for local development
 	cwd, _ := os.Getwd()
-	absCwd, _ := filepath.Abs(cwd)
-	isLocalDev := false
-	if data, err := os.ReadFile(filepath.Join(absCwd, "go.mod")); err == nil {
-		if strings.Contains(string(data), "module github.com/repyh/typego") {
-			isLocalDev = true
-		}
-	}
+	typegoRoot, isLocalDev := ecosystem.FindRepoRoot(cwd)
 
 	if isLocalDev {
-		fmt.Println("🔧 typego dev mode: using local source replacement")
-		replaceCmd := exec.Command("go", "mod", "edit", "-replace", "github.com/repyh/typego="+absCwd)
+		fmt.Printf("🔧 typego dev mode: using local source replacement at %s\n", typegoRoot)
+		replaceCmd := exec.Command("go", "mod", "edit", "-replace", "github.com/repyh/typego="+typegoRoot)
 		replaceCmd.Dir = tmpDir
 		_ = replaceCmd.Run()
 	}

@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -104,5 +104,5 @@ func getLastMod(file string) time.Time {
 }
 
 func init() {
-	rootCmd.AddCommand(watchCmd)
+	RootCmd.AddCommand(watchCmd)
 }

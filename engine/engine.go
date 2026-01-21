@@ -25,6 +25,16 @@ import (
 
 var ErrMemoryLimitExceeded = errors.New("memory limit exceeded")
 
+// GlobalEngineHook is a function that can be called whenever a new engine is created.
+// This is used by JIT binaries to register custom modules.
+type GlobalEngineHook func(eng *Engine)
+
+var GlobalHooks []GlobalEngineHook
+
+func AddGlobalHook(hook GlobalEngineHook) {
+	GlobalHooks = append(GlobalHooks, hook)
+}
+
 // ErrorHandler is a callback for unhandled errors in the engine
 type ErrorHandler func(err error, stack string)
 
@@ -89,6 +99,11 @@ func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
 
 	if memoryLimit > 0 {
 		eng.StartMemoryMonitor(100 * time.Millisecond)
+	}
+
+	// Apply global hooks (used by JIT ecosystem)
+	for _, hook := range GlobalHooks {
+		hook(eng)
 	}
 
 	return eng

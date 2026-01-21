@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ func runInterpreter(filename string) error {
 	}
 
 	// Create engine with all bridge modules pre-registered
-	eng := engine.NewEngine(memoryLimit*1024*1024, nil)
+	eng := engine.NewEngine(MemoryLimit*1024*1024, nil)
 	defer eng.Close()
 
 	// Enable Node.js polyfills
