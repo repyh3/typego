@@ -30,12 +30,10 @@ func bindValue(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Value
 		return goja.Undefined(), nil
 	}
 
-	// Dereference pointers
 	if v.Kind() == reflect.Ptr {
 		if v.IsNil() {
 			return goja.Null(), nil
 		}
-		// Check for circular reference
 		ptr := v.Pointer()
 		if cached, ok := visited[ptr]; ok {
 			return cached, nil
@@ -61,12 +59,10 @@ func bindStruct(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Valu
 	t := v.Type()
 	obj := vm.NewObject()
 
-	// Register in visited map if addressable
 	if v.CanAddr() {
 		visited[v.Addr().Pointer()] = obj
 	}
 
-	// Bind fields
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if !field.IsExported() {
@@ -81,19 +77,16 @@ func bindStruct(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Valu
 		_ = obj.Set(field.Name, jsVal)
 	}
 
-	// Bind methods (need pointer receiver access)
 	bindMethods(vm, obj, v, visited)
 
 	return obj, nil
 }
 
 func bindMethods(vm *goja.Runtime, obj *goja.Object, v reflect.Value, visited map[uintptr]goja.Value) {
-	// Get pointer to struct for pointer receiver methods
 	var vPtr reflect.Value
 	if v.CanAddr() {
 		vPtr = v.Addr()
 	} else {
-		// Create a copy and get its address
 		vCopy := reflect.New(v.Type())
 		vCopy.Elem().Set(v)
 		vPtr = vCopy
@@ -145,7 +138,6 @@ func createMethodWrapper(vm *goja.Runtime, methodVal reflect.Value, methodName s
 			return jsVal
 		}
 
-		// Multiple return values: return as array
 		arr := vm.NewArray()
 		for i, r := range results {
 			jsVal, _ := bindValue(vm, r, visited)
@@ -156,7 +148,6 @@ func createMethodWrapper(vm *goja.Runtime, methodVal reflect.Value, methodName s
 }
 
 func convertJSToGo(vm *goja.Runtime, jsVal goja.Value, goType reflect.Type) (reflect.Value, error) {
-	// Handle function callbacks
 	if goType.Kind() == reflect.Func {
 		callable, ok := goja.AssertFunction(jsVal)
 		if !ok {
@@ -165,7 +156,6 @@ func convertJSToGo(vm *goja.Runtime, jsVal goja.Value, goType reflect.Type) (ref
 		return wrapJSCallback(vm, callable, goType), nil
 	}
 
-	// Handle standard conversions
 	exported := jsVal.Export()
 	if exported == nil {
 		return reflect.Zero(goType), nil

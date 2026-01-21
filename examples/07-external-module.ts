@@ -8,7 +8,6 @@ import { Red, Green, Blue, Yellow } from "go:github.com/fatih/color";
 Println("🎨 External Go Module Test - fatih/color");
 Println("==========================================");
 
-// Test color output functions
 Red("This text should be RED");
 Green("This text should be GREEN");
 Blue("This text should be BLUE");

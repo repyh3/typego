@@ -37,14 +37,6 @@ export function main() {
 		t.Fatalf("Failed to create .typego dir: %v", err)
 	}
 
-	// Run 'typego types'
-	// We assume 'typego' binary is in the path/built or we run using 'go run'
-	// Since we are in the repo, we can use 'go run'
-	// But we need to run it inside the tmpDir or point it to the file
-
-	// For integration tests, we often assume we can run the command.
-	// We'll use the integration harness or basic exec.
-
 	// Run 'typego types' relative to the package directory
 	cwd, _ := os.Getwd()
 	rootDir := filepath.Join(cwd, "../../")

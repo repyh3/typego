@@ -23,10 +23,10 @@ typego run examples/04-secure-network.ts -M 256
 | `04-secure-network.ts` | HTTP fetch with timeouts and size limits |
 | `05-secure-fs.ts` | Sandboxed file system access |
 | `06-process-env.ts` | Filtered environment variables |
-| `07-struct-binding.ts` | Go struct field/method access |
-| `08-external-module.ts` | Third-party Go package imports |
-| `09-nested-structs.ts` | Complex nested struct handling |
-| `10-typego-stdlib.ts` | Native `typego:memory` and `typego:worker` |
+| `07-external-module.ts` | Third-party Go package imports |
+| `08-nested-structs.ts` | Complex nested struct handling |
+| `09-typego-stdlib.ts` | Native `typego:memory` and `typego:worker` |
+| `10-http-server.ts` | HTTP server with CORS and routing |
 
 ## NPM Dependencies
 

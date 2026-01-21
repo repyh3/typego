@@ -26,7 +26,6 @@ try {
         // Note: Password() returns [string, boolean] tuple in Go
     }
 
-    // Call method on the URL struct
     Println("  String():", u.String());
     Println("  Hostname():", u.Hostname());
     Println("  Port():", u.Port());

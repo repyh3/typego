@@ -42,7 +42,6 @@ func marshal(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
 
 		value := call.Argument(0).Export()
 
-		// Handle indent option
 		indent := ""
 		if len(call.Arguments) > 1 {
 			indentArg := call.Argument(1)

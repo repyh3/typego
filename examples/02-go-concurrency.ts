@@ -12,7 +12,6 @@ import { Println } from "go:fmt";
 async function main() {
     Println("🚀 Starting concurrency demo...");
 
-    // Spawn a background "heartbeat" task
     Spawn(async () => {
         for (let i = 0; i < 5; i++) {
             await Sleep(500);
@@ -20,7 +19,6 @@ async function main() {
         }
     });
 
-    // Run a sequence
     Println("Main: Doing work...");
     await Sleep(1000);
     Println("Main: Still working...");

@@ -61,9 +61,6 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop, spawner Spawner) {
 // RegisterSelf registers the 'self' object in a worker thread.
 func RegisterSelf(vm *goja.Runtime, postToParent func(msg goja.Value)) {
 	self := vm.GlobalObject()
-	// Also set typego:worker exports on global for convenient access if needed,
-	// but standard pattern is import.
-	// For now, mirroring standard web worker API on global scope:
 	_ = vm.Set("self", self)
 
 	_ = self.Set("postMessage", func(call goja.FunctionCall) goja.Value {

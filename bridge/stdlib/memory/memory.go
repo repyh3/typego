@@ -98,7 +98,6 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop, f *Factory) {
 
 	// Ptr factory for referencing values
 	_ = obj.Set("ptr", func(call goja.FunctionCall) goja.Value {
-		// Just a simple wrapper for now, can be expanded
 		val := call.Argument(0)
 		return val
 	})

@@ -15,11 +15,10 @@ const shared = makeShared("main_state", 1024);
 (shared as any)[0] = 0; // Initialize a counter at index 0
 
 async function startWorker(id: number) {
+
     // In a real app, you would use SpawnWorker(jsFile)
-    // Here we simulate intensive work on a shared resource
     Spawn(async () => {
         for (let i = 0; i < 10; i++) {
-            // Atomic-ish increment (simplified for demo)
             (shared as any)[0]++;
             Println(`Worker ${id} incremented counter to: ${(shared as any)[0]}`);
         }

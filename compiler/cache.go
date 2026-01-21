@@ -96,9 +96,6 @@ func SaveCache(entryPoint string, res *Result) error {
 		SourceMap: res.SourceMap,
 	}
 
-	// We re-compute hash here effectively, or trust the previous computation,
-	// but getCachePath re-computes it, so we are safe.
-
 	data, err := json.Marshal(entry)
 	if err != nil {
 		return err

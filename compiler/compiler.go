@@ -16,7 +16,6 @@ type Result struct {
 var GlobalVirtualModules = make(map[string]string)
 
 func Compile(entryPoint string, virtualModules map[string]string) (*Result, error) {
-	// Merge global modules
 	if virtualModules == nil {
 		virtualModules = make(map[string]string)
 	}
@@ -26,12 +25,6 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 		}
 	}
 
-	// 1. Try Cache (only if no specific virtual modules are forced, which implies dynamic requirements)
-	// We check if virtualModules contains ONLY global ones to allow caching?
-	// For now, let's assume if we are running standard compile, we might still want cache.
-	// But if virtualModules changed, the cache key should change.
-	// Since SaveCache/CheckCache might not consider virtualModules content, strictly speaking we should be careful.
-	// However, for MVP, let's keep cache logic as is but note valid concern.
 	if len(virtualModules) == 0 {
 		if res, err := CheckCache(entryPoint); err == nil && res != nil {
 			return res, nil
@@ -53,10 +46,8 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 				Name: "typego-virtual",
 				Setup: func(build api.PluginBuild) {
 					build.OnResolve(api.OnResolveOptions{Filter: `^go:.*`}, func(args api.OnResolveArgs) (api.OnResolveResult, error) {
-						// Capture the import
 						collectedImports = append(collectedImports, args.Path)
 
-						// Check for core modules and redirect to internal namespace
 						switch args.Path {
 						case "go:fmt", "go:os", "go:sync", "go:net/http", "go:memory", "go:crypto":
 							return api.OnResolveResult{Path: args.Path, Namespace: "typego-internal"}, nil
@@ -73,32 +64,31 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 						return api.OnResolveResult{Path: args.Path, Namespace: "typego-internal"}, nil
 					})
 					build.OnLoad(api.OnLoadOptions{Filter: `.*`, Namespace: "typego-hyperlink"}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
-						// Check if we have dynamic content for this module
 						if content, ok := virtualModules[args.Path]; ok {
 							return api.OnLoadResult{Contents: &content, Loader: api.LoaderTS}, nil
 						}
 
 						// Default/Fallback (used during scan)
-						// We try to be permissive for the scanner by returning a Proxy or dummy
 						content := "const p = new Proxy({}, { get: () => () => {} }); export const Println = p; export const Printf = p; export default p;"
 						return api.OnLoadResult{Contents: &content, Loader: api.LoaderTS}, nil
 					})
 					build.OnLoad(api.OnLoadOptions{Filter: `.*`, Namespace: "typego-internal"}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
 						var content string
 						switch args.Path {
-						case "go/memory", "go:memory":
+						case "go:memory":
 							content = "const m = (globalThis as any).__typego_memory__; export const Ptr = m.ptr; export const makeShared = m.makeShared;"
-						case "go/fmt", "go:fmt":
+						case "go:fmt":
 							content = "const f = (globalThis as any).__go_fmt__; export const Println = f.Println; export const Printf = f.Printf;"
-						case "go/os", "go:os":
+						case "go:os":
 							content = "const o = (globalThis as any).__go_os__; export const WriteFile = o.WriteFile; export const ReadFile = o.ReadFile;"
-						case "go/net/http", "go:net/http":
+						case "go:net/http":
 							content = "const h = (globalThis as any).__go_http__; export const Get = h.Get; export const Fetch = h.Fetch; export const Post = h.Post; export const ListenAndServe = h.ListenAndServe;"
-						case "go/sync", "go:sync":
+						case "go:sync":
 							content = "const s = (globalThis as any).__go_sync__; export const Spawn = s.Spawn; export const Sleep = s.Sleep; export const Chan = (globalThis as any).Chan;"
-						case "go/crypto", "go:crypto":
+						case "go:crypto":
 							content = "const c = (globalThis as any).__go_crypto__; export const Sha256 = c.Sha256; export const Sha512 = c.Sha512; export const HmacSha256 = c.HmacSha256; export const HmacSha256Verify = c.HmacSha256Verify; export const RandomBytes = c.RandomBytes; export const Uuid = c.Uuid;"
-						// New TypeGo Stdlib
+
+						// TypeGo Stdlib
 						case "typego:memory":
 							content = "const m = (globalThis as any).__typego_memory__; export const makeShared = m.makeShared; export const stats = m.stats; export const ptr = m.ptr;"
 						case "typego:worker":

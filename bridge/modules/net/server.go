@@ -155,7 +155,6 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 	headersSent := false
 	statusCode := 200
 
-	// Set header
 	_ = res.Set("setHeader", func(call goja.FunctionCall) goja.Value {
 		key := call.Argument(0).String()
 		value := call.Argument(1).String()
@@ -163,13 +162,11 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 		return goja.Undefined()
 	})
 
-	// Set status code
 	_ = res.Set("status", func(call goja.FunctionCall) goja.Value {
 		statusCode = int(call.Argument(0).ToInteger())
 		return res // Chainable
 	})
 
-	// Write body
 	_ = res.Set("write", func(call goja.FunctionCall) goja.Value {
 		if !headersSent {
 			w.WriteHeader(statusCode)
@@ -201,7 +198,6 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 			headersSent = true
 		}
 		if len(call.Arguments) > 0 {
-			// Convert to JSON string
 			val := call.Argument(0).Export()
 			jsonStr, err := toJSON(val)
 			if err != nil {

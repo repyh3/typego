@@ -14,7 +14,6 @@ import (
 	"github.com/repyh/typego/bridge/stdlib/worker"
 	"github.com/repyh/typego/eventloop"
 
-	// Import modules to trigger their init() registration
 	_ "github.com/repyh/typego/bridge/modules/crypto"
 	_ "github.com/repyh/typego/bridge/modules/fmt"
 	_ "github.com/repyh/typego/bridge/modules/json"
@@ -75,10 +74,9 @@ func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
 		mf = memory.NewFactory()
 	}
 
-	// Core modules (special dependencies)
 	core.RegisterConsole(vm)
 	core.RegisterGlobals(vm)
-	// Register new stdlib modules
+
 	memory.Register(vm, el, mf)
 
 	// Auto-registered modules (fmt, os, http, sync)
@@ -101,7 +99,7 @@ func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
 		eng.StartMemoryMonitor(100 * time.Millisecond)
 	}
 
-	// Apply global hooks (used by JIT ecosystem)
+	// Apply global hooks
 	for _, hook := range GlobalHooks {
 		hook(eng)
 	}

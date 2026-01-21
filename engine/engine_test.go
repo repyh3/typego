@@ -104,12 +104,8 @@ func TestEngine_OnError_Callback(t *testing.T) {
 		}
 	}
 
-	// Trigger an error via RunSafe - but note: JS "throw" is caught by goja, not panic
-	// OnError is for Go panics, so we test via a normal error path
 	_, _ = eng.RunSafe(`throw new Error("trigger")`)
 
-	// For Go panics, we'd need to simulate a panic in a binding, which is complex
-	// The callback mechanism is tested by verifying it exists
 	if eng.OnError == nil {
 		t.Error("OnError callback should be set")
 	}
@@ -125,7 +121,6 @@ func TestEngine_Context(t *testing.T) {
 		t.Fatal("Expected context, got nil")
 	}
 
-	// Context should not be done initially
 	select {
 	case <-ctx.Done():
 		t.Fatal("Context should not be done before Close")
@@ -134,9 +129,6 @@ func TestEngine_Context(t *testing.T) {
 	}
 
 	eng.Close()
-
-	// Context may or may not be cancelled by Close depending on implementation
-	// Just verify no panic
 }
 
 // TestEventLoop_GracefulShutdown verifies Shutdown with timeout works

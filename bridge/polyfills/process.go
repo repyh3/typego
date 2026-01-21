@@ -12,7 +12,6 @@ import (
 func EnableProcess(vm *goja.Runtime) {
 	proc := vm.NewObject()
 
-	// process.env (Filtered for security)
 	env := vm.NewObject()
 	whitelist := map[string]bool{
 		"PATH":     true,
@@ -33,7 +32,8 @@ func EnableProcess(vm *goja.Runtime) {
 			}
 		}
 	}
-	// Force color support for libraries like chalk
+
+	// Force color
 	_ = env.Set("FORCE_COLOR", "1")
 	_ = proc.Set("env", env)
 

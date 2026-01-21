@@ -15,7 +15,7 @@ async function main() {
     // System whitelisted
     Println(`PATH exists: ${process.env.PATH ? "✅" : "❌"}`);
 
-    // Potentially sensitive (Automatically blocked by our whitelist-only policy)
+    // Potentially sensitive (Automatically blocked by whitelist-only policy)
     const sensitiveKeys = ["APPDATA", "USERPROFILE", "AWS_SECRET", "DB_PASSWORD"];
     for (const key of sensitiveKeys) {
         const leaked = process.env[key];
