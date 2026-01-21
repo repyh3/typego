@@ -1,4 +1,4 @@
-module github.com/repyh3/typego
+module github.com/repyh/typego
 
 go 1.25.0
 
