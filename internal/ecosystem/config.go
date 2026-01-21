@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const ConfigFileName = "typego.modules.json"
+
 // ModuleConfig represents the schema for typego.modules.json
 type ModuleConfig struct {
 	Schema       string            `json:"$schema,omitempty"`

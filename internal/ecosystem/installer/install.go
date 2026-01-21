@@ -198,6 +198,16 @@ func RunInstall(cwd string) error {
 		return err
 	}
 
-	fmt.Printf("✅ Install Complete! Binary cached at .typego/bin/%s\n", BinaryName)
+	binaryPath := filepath.Join(binDir, BinaryName)
+	fmt.Println("✅ Install Complete! Binary cached at", binaryPath)
+
+	// Ensure .typego is ignored
+	_ = ecosystem.EnsureGitIgnore(cwd)
+
+	// Write checksum for stale detection
+	if hash, err := ecosystem.GetConfigHash(cwd); err == nil {
+		_ = ecosystem.WriteChecksum(cwd, hash)
+	}
+
 	return nil
 }
