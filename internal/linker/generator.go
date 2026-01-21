@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// GenerateShim creates the Go code to bind the package to the VM.
 // Binds both top-level functions and exported structs.
 func GenerateShim(info *PackageInfo, variableName string) string {
 	var sb strings.Builder
@@ -33,7 +32,6 @@ func GenerateShim(info *PackageInfo, variableName string) string {
 	return sb.String()
 }
 
-// GenerateTypes creates the TypeScript definition with JSDoc.
 func GenerateTypes(info *PackageInfo) string {
 	var sb strings.Builder
 
@@ -234,7 +232,6 @@ func generateFunctionDeclWithContext(fn ExportedFunc, knownStructs map[string]bo
 	return sb.String()
 }
 
-// GenerateTSShim creates the TypeScript source for the virtual module entry point.
 // This is used by the compiler to resolve imports like "go:github.com/..."
 func GenerateTSShim(info *PackageInfo) string {
 	var sb strings.Builder

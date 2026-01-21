@@ -14,7 +14,6 @@ const (
 	HandoffEnvVar = "TYPEGO_HANDOFF"
 )
 
-// GetJITBinaryPath returns the path to the JIT binary if it exists
 func GetJITBinaryPath(cwd string) (string, bool) {
 	path := filepath.Join(cwd, HiddenDirName, "bin", BinaryName)
 	if _, err := os.Stat(path); err == nil {
@@ -23,7 +22,6 @@ func GetJITBinaryPath(cwd string) (string, bool) {
 	return "", false
 }
 
-// IsHandoffRequired returns true if we should delegate to the JIT binary
 func IsHandoffRequired(cwd string) bool {
 	// Prevent infinite loops where the JIT binary calls itself
 	if os.Getenv(HandoffEnvVar) == "true" {
@@ -35,15 +33,12 @@ func IsHandoffRequired(cwd string) bool {
 		return false
 	}
 
-	// Stale check
 	return VerifyChecksum(cwd)
 }
 
-// EnsureGitIgnore adds HiddenDirName to .gitignore if it exists and doesn't already contain it
 func EnsureGitIgnore(cwd string) error {
 	gitIgnorePath := filepath.Join(cwd, ".gitignore")
 
-	// Read existing content if it exists
 	content, err := os.ReadFile(gitIgnorePath)
 	if err == nil {
 		lines := strings.Split(string(content), "\n")
@@ -54,7 +49,6 @@ func EnsureGitIgnore(cwd string) error {
 		}
 	}
 
-	// Create or Append to file
 	f, err := os.OpenFile(gitIgnorePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
@@ -68,7 +62,6 @@ func EnsureGitIgnore(cwd string) error {
 	return err
 }
 
-// GetConfigHash returns the SHA256 hash of the typego.modules.json file
 func GetConfigHash(cwd string) (string, error) {
 	configPath := filepath.Join(cwd, ConfigFileName)
 	data, err := os.ReadFile(configPath)
@@ -83,13 +76,11 @@ func GetConfigHash(cwd string) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
-// WriteChecksum saves the hash to .typego/checksum
 func WriteChecksum(cwd string, hash string) error {
 	path := filepath.Join(cwd, HiddenDirName, "checksum")
 	return os.WriteFile(path, []byte(hash), 0644)
 }
 
-// VerifyChecksum returns true if the current config hash matches the saved checksum
 func VerifyChecksum(cwd string) bool {
 	savedPath := filepath.Join(cwd, HiddenDirName, "checksum")
 	saved, err := os.ReadFile(savedPath)
@@ -105,7 +96,6 @@ func VerifyChecksum(cwd string) bool {
 	return string(saved) == current
 }
 
-// FindRepoRoot attempts to find the root of the typego repository by walking up from startDir
 func FindRepoRoot(startDir string) (string, bool) {
 	curr := startDir
 	for {

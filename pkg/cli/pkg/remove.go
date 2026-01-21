@@ -27,23 +27,19 @@ Examples:
 
 		module := args[0]
 
-		// Read config
 		config, err := internal.ReadModulesConfig(cwd)
 		if err != nil {
 			internal.Error(fmt.Sprintf("Failed to read config: %v", err))
 			os.Exit(1)
 		}
 
-		// Check if exists
 		if _, ok := config.Dependencies[module]; !ok {
 			internal.Warn(fmt.Sprintf("%s is not in dependencies", module))
 			os.Exit(0)
 		}
 
-		// Remove
 		delete(config.Dependencies, module)
 
-		// Write back
 		if err := internal.WriteModulesConfig(cwd, config); err != nil {
 			internal.Error(fmt.Sprintf("Failed to write config: %v", err))
 			os.Exit(1)

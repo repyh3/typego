@@ -23,7 +23,6 @@ func (m *jsonModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 	Register(vm)
 }
 
-// Register injects the JSON functions into the runtime
 func Register(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	_ = obj.Set("Marshal", marshal(vm))
@@ -33,7 +32,6 @@ func Register(vm *goja.Runtime) {
 	_ = vm.Set("__go_json__", obj)
 }
 
-// marshal converts a JS value to a JSON string
 func marshal(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
 		if len(call.Arguments) == 0 {
@@ -67,7 +65,6 @@ func marshal(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
 	}
 }
 
-// unmarshal parses a JSON string into a JS value
 func unmarshal(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
 		if len(call.Arguments) == 0 {

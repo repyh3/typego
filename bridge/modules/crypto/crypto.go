@@ -28,7 +28,6 @@ func (m *cryptoModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 	Register(vm)
 }
 
-// Register injects the crypto functions into the runtime
 func Register(vm *goja.Runtime) {
 	obj := vm.NewObject()
 

@@ -27,7 +27,6 @@ Examples:
 			os.Exit(1)
 		}
 
-		// Parse module@version
 		arg := args[0]
 		module := arg
 		version := "latest"
@@ -37,7 +36,6 @@ Examples:
 			version = arg[idx+1:]
 		}
 
-		// Read config
 		config, err := internal.ReadModulesConfig(cwd)
 		if err != nil {
 			internal.Error(fmt.Sprintf("Failed to read config: %v", err))
@@ -45,19 +43,16 @@ Examples:
 			os.Exit(1)
 		}
 
-		// Check if already exists
 		if existingVersion, ok := config.Dependencies[module]; ok {
 			internal.Warn(fmt.Sprintf("%s already exists with version %s", module, existingVersion))
 			internal.Info(fmt.Sprintf("Updating to %s", version))
 		}
 
-		// Add/Update dependency
 		if config.Dependencies == nil {
 			config.Dependencies = make(map[string]string)
 		}
 		config.Dependencies[module] = version
 
-		// Write back
 		if err := internal.WriteModulesConfig(cwd, config); err != nil {
 			internal.Error(fmt.Sprintf("Failed to write config: %v", err))
 			os.Exit(1)
@@ -65,7 +60,6 @@ Examples:
 
 		internal.Success(fmt.Sprintf("Added %s@%s", module, version))
 
-		// Auto-regenerate types
 		fmt.Println("📦 Regenerating types...")
 		cmd.TypesCmd.SetArgs([]string{})
 		if err := cmd.TypesCmd.Execute(); err != nil {

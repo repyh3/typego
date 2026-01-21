@@ -13,7 +13,6 @@ import (
 	"github.com/repyh/typego/eventloop"
 )
 
-// Server wraps http.Server for TypeGo
 type Server struct {
 	server *http.Server
 	el     *eventloop.EventLoop
@@ -21,7 +20,6 @@ type Server struct {
 	mu     sync.Mutex
 }
 
-// NewServer creates a new TypeGo HTTP server
 func NewServer(vm *goja.Runtime, el *eventloop.EventLoop) *Server {
 	return &Server{
 		vm: vm,
@@ -29,7 +27,6 @@ func NewServer(vm *goja.Runtime, el *eventloop.EventLoop) *Server {
 	}
 }
 
-// ListenAndServe starts the HTTP server with a JS handler
 func (s *Server) ListenAndServe(addr string, handler goja.Callable) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -72,7 +69,6 @@ func (s *Server) ListenAndServe(addr string, handler goja.Callable) error {
 	return nil
 }
 
-// Close shuts down the server gracefully
 func (s *Server) Close(timeout time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -86,7 +82,6 @@ func (s *Server) Close(timeout time.Duration) error {
 	return s.server.Shutdown(ctx)
 }
 
-// wrapRequest creates a JS object representing the HTTP request
 func (s *Server) wrapRequest(r *http.Request) goja.Value {
 	req := s.vm.NewObject()
 
@@ -149,7 +144,6 @@ func (s *Server) wrapRequest(r *http.Request) goja.Value {
 	return req
 }
 
-// wrapResponse creates a JS object for writing HTTP responses
 func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value {
 	res := s.vm.NewObject()
 	headersSent := false

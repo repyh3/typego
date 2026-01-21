@@ -34,7 +34,6 @@ restarts. Provides colored output and compilation timing.`,
 		filename := args[0]
 		cwd, _ := os.Getwd()
 
-		// Attempt JIT Handoff
 		if ecosystem.IsHandoffRequired(cwd) {
 			binaryPath, _ := ecosystem.GetJITBinaryPath(cwd)
 

@@ -38,7 +38,6 @@ var TypesCmd = &cobra.Command{
 			currentContent = core.GlobalTypes
 		}
 
-		// Initialize Fetcher
 		fetcher, err := linker.NewFetcher()
 		if err != nil {
 			fmt.Printf("Failed to init fetcher: %v\n", err)

@@ -6,16 +6,13 @@ import (
 	"github.com/repyh/typego/eventloop"
 )
 
-// Handle represents a running worker.
 type Handle interface {
 	PostMessage(msg goja.Value)
 	Terminate()
 }
 
-// Spawner is a function that creates a new worker.
 type Spawner func(scriptPath string, onMessage func(goja.Value)) (Handle, error)
 
-// Register injects the typego:worker module into the runtime.
 func Register(vm *goja.Runtime, el *eventloop.EventLoop, spawner Spawner) {
 	obj := vm.NewObject()
 
@@ -58,7 +55,6 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop, spawner Spawner) {
 	_ = vm.Set("__typego_worker__", obj)
 }
 
-// RegisterSelf registers the 'self' object in a worker thread.
 func RegisterSelf(vm *goja.Runtime, postToParent func(msg goja.Value)) {
 	self := vm.GlobalObject()
 	_ = vm.Set("self", self)

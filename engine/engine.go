@@ -24,7 +24,6 @@ import (
 
 var ErrMemoryLimitExceeded = errors.New("memory limit exceeded")
 
-// GlobalEngineHook is a function that can be called whenever a new engine is created.
 // This is used by JIT binaries to register custom modules.
 type GlobalEngineHook func(eng *Engine)
 
@@ -34,7 +33,6 @@ func AddGlobalHook(hook GlobalEngineHook) {
 	GlobalHooks = append(GlobalHooks, hook)
 }
 
-// ErrorHandler is a callback for unhandled errors in the engine
 type ErrorHandler func(err error, stack string)
 
 type Engine struct {
@@ -50,7 +48,6 @@ type Engine struct {
 	cancel context.CancelFunc
 }
 
-// WrapError converts a Go error or panic into a JS Error with stack trace
 func (e *Engine) WrapError(recovered interface{}) error {
 	switch v := recovered.(type) {
 	case *goja.Exception:
@@ -79,7 +76,6 @@ func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
 
 	memory.Register(vm, el, mf)
 
-	// Auto-registered modules (fmt, os, http, sync)
 	core.InitAll(vm, el)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -125,14 +121,12 @@ func (e *Engine) RunSafe(js string) (result goja.Value, err error) {
 	return e.VM.RunString(js)
 }
 
-// getStack returns the current Go stack trace for debugging
 func (e *Engine) getStack() string {
 	buf := make([]byte, 4096)
 	n := runtime.Stack(buf, false)
 	return string(buf[:n])
 }
 
-// Context returns the engine's context for cancellation
 func (e *Engine) Context() context.Context {
 	return e.ctx
 }

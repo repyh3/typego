@@ -28,11 +28,9 @@ Use --compile to generate a standalone Go binary (slower, but more portable).`,
 		filename := args[0]
 		cwd, _ := os.Getwd()
 
-		// Attempt JIT Handoff
 		if !compileMode && ecosystem.IsHandoffRequired(cwd) {
 			binaryPath, _ := ecosystem.GetJITBinaryPath(cwd)
 
-			// Call the local binary with same args
 			// We MUST set the handoff env var to true to avoid recursion
 			handoff := exec.Command(binaryPath, os.Args[1:]...)
 			handoff.Stdout = os.Stdout
@@ -51,10 +49,8 @@ Use --compile to generate a standalone Go binary (slower, but more portable).`,
 		}
 
 		if compileMode {
-			// Standalone compilation mode
 			runStandalone(filename)
 		} else {
-			// Fast interpreter mode (default)
 			if err := runInterpreter(filename); err != nil {
 				fmt.Printf("Error: %v\n", err)
 				os.Exit(1)
@@ -73,7 +69,6 @@ func init() {
 func runStandalone(filename string) {
 	absPath, _ := filepath.Abs(filename)
 
-	// Create unique temp dir for this run
 	tmpDir, err := os.MkdirTemp("", "typego_run_*")
 	if err != nil {
 		fmt.Printf("Error creating temp dir: %v\n", err)
@@ -81,10 +76,8 @@ func runStandalone(filename string) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	// PASS 1: Scan
 	res, _ := compiler.Compile(absPath, nil)
 
-	// Initialize Fetcher
 	fetcher, err := linker.NewFetcher()
 	if err != nil {
 		fmt.Printf("Failed to init fetcher: %v\n", err)
@@ -92,7 +85,6 @@ func runStandalone(filename string) {
 	}
 	defer fetcher.Cleanup()
 
-	// Generate Virtual Modules
 	virtualModules := make(map[string]string)
 	var bindBlock string
 
@@ -119,14 +111,12 @@ func runStandalone(filename string) {
 		}
 	}
 
-	// PASS 2: Compile
 	res, err = compiler.Compile(absPath, virtualModules)
 	if err != nil {
 		fmt.Printf("Build Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Generate Shim
 	var importBlock strings.Builder
 	for _, imp := range res.Imports {
 		if len(imp) > 3 && imp[:3] == "go:" {
@@ -140,14 +130,12 @@ func runStandalone(filename string) {
 		}
 	}
 
-	// Use shared ShimTemplate from internal/builder
 	shimContent := fmt.Sprintf(builder.ShimTemplate, importBlock.String(), fmt.Sprintf("%q", res.JS), bindBlock, MemoryLimit*1024*1024)
 	if err := os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(shimContent), 0644); err != nil {
 		fmt.Printf("Error writing shim: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Generate go.mod (minimal, let go get figure out versions)
 	goModContent := `module typego_run
 
 go 1.23.6
@@ -155,7 +143,6 @@ go 1.23.6
 	_ = os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(goModContent), 0644)
 
 	// Point to local TypeGo source ONLY if we are in the repo (Dev Mode)
-	// Detect if we are running in the typego repo for local development
 	cwd, _ := os.Getwd()
 	typegoRoot, isLocalDev := ecosystem.FindRepoRoot(cwd)
 
@@ -166,7 +153,6 @@ go 1.23.6
 		_ = replaceCmd.Run()
 	}
 
-	// Fetch dependencies (only root package needed, engine pulls in all subpackages)
 	fmt.Print("⏳ Resolving dependencies...")
 	getCmd := exec.Command("go", "get", "github.com/repyh/typego/engine")
 	getCmd.Dir = tmpDir
@@ -179,7 +165,6 @@ go 1.23.6
 		fmt.Println(" done")
 	}
 
-	// Tidy to resolve transitive dependencies
 	fmt.Print("⏳ Tidying modules...")
 	tidy := exec.Command("go", "mod", "tidy")
 	tidy.Dir = tmpDir
@@ -192,7 +177,6 @@ go 1.23.6
 		fmt.Println(" done")
 	}
 
-	// Build
 	fmt.Print("⏳ Compiling...")
 	exePath := filepath.Join(tmpDir, "app.exe")
 	build := exec.Command("go", "build", "-o", exePath, ".")
@@ -204,7 +188,6 @@ go 1.23.6
 	}
 	fmt.Println(" done")
 
-	// Run
 	run := exec.Command(exePath)
 	run.Stdout = os.Stdout
 	run.Stderr = os.Stderr

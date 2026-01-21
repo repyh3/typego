@@ -19,7 +19,6 @@ var buildOut string
 var minify bool
 var buildTarget string
 
-// Supported cross-compilation targets
 var supportedTargets = map[string]struct{ goos, goarch string }{
 	"linux-amd64":   {"linux", "amd64"},
 	"linux-arm64":   {"linux", "arm64"},
@@ -38,19 +37,16 @@ var BuildCmd = &cobra.Command{
 
 		fmt.Printf("📦 Building %s...\n", absPath)
 
-		// PASS 1: Scan for imports
 		// We ignore errors here because the virtual modules are not yet populated
 		res, _ := compiler.Compile(absPath, nil)
 
-		// 2. Prepare Temp Directory
 		tmpDir := ".typego_build_tmp"
 		if err := os.MkdirAll(tmpDir, 0755); err != nil {
 			fmt.Printf("Error creating temp dir: %v\n", err)
 			os.Exit(1)
 		}
-		defer os.RemoveAll(tmpDir) // Cleanup
+		defer os.RemoveAll(tmpDir)
 
-		// Initialize Fetcher
 		fetcher, err := linker.NewFetcher()
 		if err != nil {
 			fmt.Printf("Failed to init fetcher: %v\n", err)
@@ -58,7 +54,6 @@ var BuildCmd = &cobra.Command{
 		}
 		defer fetcher.Cleanup()
 
-		// 3. Inspect Imports & Generate Virtual Modules
 		virtualModules := make(map[string]string)
 		var bindBlock string
 
@@ -76,10 +71,8 @@ var BuildCmd = &cobra.Command{
 						continue
 					}
 
-					// Generate Shim Binding Code
 					bindBlock += linker.GenerateShim(info, "pkg_"+info.Name)
 
-					// Generate Virtual Module Content (Exports)
 					var vmContent strings.Builder
 					for _, fn := range info.Exports {
 						// e.g. export const Red = (globalThis as any)._go_hyper_color.Red;
@@ -92,7 +85,6 @@ var BuildCmd = &cobra.Command{
 			}
 		}
 
-		// PASS 2: Compile with Virtual Modules (Strict)
 		fmt.Println("🔨 Compiling binary (Pass 2)...")
 		res, err = compiler.Compile(absPath, virtualModules)
 		if err != nil {
@@ -100,7 +92,6 @@ var BuildCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Generate Import Block for Shim
 		var importBlock strings.Builder
 		for _, imp := range res.Imports {
 			if len(imp) > 3 && imp[:3] == "go:" {
@@ -121,7 +112,6 @@ var BuildCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// 4. Generate go.mod for the shim
 		goModContent := `module typego_app
 
 go 1.23.6
@@ -132,7 +122,6 @@ go 1.23.6
 			os.Exit(1)
 		}
 
-		// Detect Dev Mode using FindRepoRoot
 		cwd, _ := os.Getwd()
 		typegoRoot, isLocalDev := ecosystem.FindRepoRoot(cwd)
 
@@ -143,7 +132,6 @@ go 1.23.6
 			_ = replaceCmd.Run()
 		}
 
-		// Fetch all required typego packages
 		packages := []string{
 			"github.com/repyh/typego/bridge/core",
 			"github.com/repyh/typego/bridge/polyfills",
@@ -169,7 +157,6 @@ go 1.23.6
 			_ = getCmd.Run()
 		}
 
-		// 5. Build Binary
 		outputName := buildOut
 		if outputName == "" {
 			outputName = "app.exe"
@@ -194,7 +181,6 @@ go 1.23.6
 		buildCmd.Stdout = os.Stdout
 		buildCmd.Stderr = os.Stderr
 
-		// Cross-compilation support
 		env := os.Environ()
 		if buildTarget != "" {
 			if target, ok := supportedTargets[buildTarget]; ok {

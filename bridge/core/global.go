@@ -4,7 +4,6 @@ import (
 	"github.com/dop251/goja"
 )
 
-// RegisterGlobals injects global helper functions into the runtime
 func RegisterGlobals(vm *goja.Runtime) {
 	_ = vm.Set("isGoError", func(call goja.FunctionCall) goja.Value {
 		arg := call.Argument(0)

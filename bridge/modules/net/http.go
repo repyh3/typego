@@ -36,10 +36,8 @@ var httpClient = &http.Client{
 
 const maxResponseBodySize = 50 * 1024 * 1024 // 50MB
 
-// Module implements the go:net/http package bindings.
 type Module struct{}
 
-// Get maps to http.Get
 func (h *Module) Get(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
 		url := call.Argument(0).String()
@@ -69,7 +67,6 @@ func (h *Module) Get(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	}
 }
 
-// Register injects the http functions into the runtime
 func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 	h := &Module{}
 	server := NewServer(vm, el)
@@ -77,7 +74,6 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 	obj := vm.NewObject()
 	_ = obj.Set("Get", h.Get(vm))
 
-	// HTTP client with custom headers
 	_ = obj.Set("Post", func(call goja.FunctionCall) goja.Value {
 		url := call.Argument(0).String()
 		body := call.Argument(1).String()
@@ -165,7 +161,6 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 		return p
 	})
 
-	// HTTP Server bindings
 	_ = obj.Set("ListenAndServe", func(call goja.FunctionCall) goja.Value {
 		addr := call.Argument(0).String()
 		handler, ok := goja.AssertFunction(call.Argument(1))
@@ -195,7 +190,6 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 	_ = vm.Set("__go_http__", obj)
 }
 
-// stringReader implements io.Reader for a string
 type stringReader struct {
 	s string
 	i int

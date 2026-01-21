@@ -5,7 +5,6 @@ const PORT = ":8080";
 
 Println(`Starting server on http://localhost${PORT}`);
 
-// Start the server with a handler function
 ListenAndServe(PORT, async (req: Request, res: Response) => {
     Println(`[${req.method}] ${req.url}`);
 
@@ -58,11 +57,9 @@ ListenAndServe(PORT, async (req: Request, res: Response) => {
         }
 
         if (req.path === "/error") {
-            // Demonstrate error handling (TypeGo catches panics too)
             throw new Error("Something went wrong!");
         }
 
-        // 404 Default
         res.status(404).json({ error: "Not Found", path: req.path });
 
     } catch (e) {

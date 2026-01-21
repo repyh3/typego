@@ -27,7 +27,6 @@ Examples:
 			os.Exit(1)
 		}
 
-		// Read config
 		config, err := internal.ReadModulesConfig(cwd)
 		if err != nil {
 			internal.Error(fmt.Sprintf("Failed to read config: %v", err))

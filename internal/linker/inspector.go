@@ -9,7 +9,6 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// PackageInfo contains metadata about an inspected Go package.
 type PackageInfo struct {
 	Name       string
 	ImportPath string
@@ -17,7 +16,6 @@ type PackageInfo struct {
 	Structs    []ExportedStruct
 }
 
-// ExportedFunc represents a top-level exported function.
 type ExportedFunc struct {
 	Name string
 	Doc  string
@@ -25,7 +23,6 @@ type ExportedFunc struct {
 	Ret  []string
 }
 
-// ExportedStruct represents an exported struct type with its fields and methods.
 type ExportedStruct struct {
 	Name        string
 	PackagePath string // Source package import path
@@ -36,7 +33,6 @@ type ExportedStruct struct {
 	Embeds      []string // Embedded struct type names (for interface extension)
 }
 
-// FieldInfo describes a struct field.
 type FieldInfo struct {
 	Name       string
 	Type       string
@@ -45,7 +41,6 @@ type FieldInfo struct {
 	ImportPath string
 }
 
-// MethodInfo describes a method attached to a struct.
 type MethodInfo struct {
 	Name           string
 	Doc            string
@@ -56,18 +51,15 @@ type MethodInfo struct {
 	HasCallbackArg bool
 }
 
-// ArgInfo describes a function/method argument.
 type ArgInfo struct {
 	Name string
 	Type string
 }
 
-// GoToTSType maps Go types to TypeScript equivalents.
 func GoToTSType(goType string) string {
 	return goToTSTypeWithContext(goType, nil)
 }
 
-// GoToTSTypeWithStructs maps Go types to TypeScript equivalents, using known structs for proper type references.
 func GoToTSTypeWithStructs(goType string, knownStructs map[string]bool) string {
 	return goToTSTypeWithContext(goType, knownStructs)
 }
@@ -121,7 +113,6 @@ func goToTSTypeWithContext(goType string, knownStructs map[string]bool) string {
 	}
 }
 
-// Inspect loads and analyzes a Go package for functions, structs, and methods.
 func Inspect(importPath string, dir string) (*PackageInfo, error) {
 	cfg := &packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles |

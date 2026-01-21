@@ -7,10 +7,8 @@ import (
 	"github.com/dop251/goja"
 )
 
-// Console implements the JS console object
 type Console struct{}
 
-// Log prints arguments to stdout
 func (c *Console) Log(call goja.FunctionCall) goja.Value {
 	args := make([]string, len(call.Arguments))
 	for i, arg := range call.Arguments {
@@ -20,7 +18,6 @@ func (c *Console) Log(call goja.FunctionCall) goja.Value {
 	return goja.Undefined()
 }
 
-// Error prints arguments to stderr
 func (c *Console) Error(call goja.FunctionCall) goja.Value {
 	args := make([]string, len(call.Arguments))
 	for i, arg := range call.Arguments {
@@ -31,7 +28,6 @@ func (c *Console) Error(call goja.FunctionCall) goja.Value {
 	return goja.Undefined()
 }
 
-// RegisterConsole injects the console object into the runtime
 func RegisterConsole(vm *goja.Runtime) {
 	c := &Console{}
 	obj := vm.NewObject()

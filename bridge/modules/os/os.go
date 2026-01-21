@@ -26,7 +26,6 @@ func (m *osModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 	Register(vm)
 }
 
-// Module implements the go:os package bindings.
 type Module struct {
 	Root string
 }
@@ -65,7 +64,6 @@ func (m *Module) sanitizePath(path string) (string, error) {
 	return realPath, nil
 }
 
-// WriteFile maps to os.WriteFile
 func (m *Module) WriteFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
 		path := call.Argument(0).String()
@@ -85,7 +83,6 @@ func (m *Module) WriteFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value 
 	}
 }
 
-// ReadFile maps to os.ReadFile
 func (m *Module) ReadFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
 		path := call.Argument(0).String()
@@ -104,7 +101,6 @@ func (m *Module) ReadFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	}
 }
 
-// Register injects the os functions into the runtime
 func Register(vm *goja.Runtime) {
 	wd, _ := os.Getwd()
 	absRoot, _ := filepath.Abs(wd)
@@ -114,7 +110,6 @@ func Register(vm *goja.Runtime) {
 	_ = obj.Set("WriteFile", m.WriteFile(vm))
 	_ = obj.Set("ReadFile", m.ReadFile(vm))
 
-	// Environment bindings
 	_ = obj.Set("Getenv", func(call goja.FunctionCall) goja.Value {
 		key := call.Argument(0).String()
 		return vm.ToValue(os.Getenv(key))
@@ -129,7 +124,6 @@ func Register(vm *goja.Runtime) {
 		return result
 	})
 
-	// Process bindings
 	_ = obj.Set("Exit", func(call goja.FunctionCall) goja.Value {
 		code := int(call.Argument(0).ToInteger())
 		os.Exit(code)
@@ -146,7 +140,6 @@ func Register(vm *goja.Runtime) {
 		return vm.ToValue(wd)
 	})
 
-	// Directory operations
 	_ = obj.Set("Mkdir", func(call goja.FunctionCall) goja.Value {
 		path := call.Argument(0).String()
 		if err := os.Mkdir(path, 0755); err != nil {
