@@ -1,4 +1,4 @@
-package cli
+package cmd
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var typesCmd = &cobra.Command{
+var TypesCmd = &cobra.Command{
 	Use:   "types [file]",
 	Short: "Sync and update TypeGo ambient definitions",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -180,7 +180,7 @@ var typesCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(typesCmd)
+	// Registered in root.go
 }
 
 func updateTypeBlock(content []byte, moduleName, typeDef string) []byte {

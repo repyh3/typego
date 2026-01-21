@@ -33,6 +33,7 @@ type ExportedStruct struct {
 	Doc         string
 	Fields      []FieldInfo
 	Methods     []MethodInfo
+	Embeds      []string // Embedded struct type names (for interface extension)
 }
 
 // FieldInfo describes a struct field.
@@ -63,6 +64,15 @@ type ArgInfo struct {
 
 // GoToTSType maps Go types to TypeScript equivalents.
 func GoToTSType(goType string) string {
+	return goToTSTypeWithContext(goType, nil)
+}
+
+// GoToTSTypeWithStructs maps Go types to TypeScript equivalents, using known structs for proper type references.
+func GoToTSTypeWithStructs(goType string, knownStructs map[string]bool) string {
+	return goToTSTypeWithContext(goType, knownStructs)
+}
+
+func goToTSTypeWithContext(goType string, knownStructs map[string]bool) string {
 	switch goType {
 	case "string":
 		return "string"
@@ -78,7 +88,7 @@ func GoToTSType(goType string) string {
 		return "any"
 	default:
 		if strings.HasPrefix(goType, "[]") {
-			return GoToTSType(goType[2:]) + "[]"
+			return goToTSTypeWithContext(goType[2:], knownStructs) + "[]"
 		}
 		if strings.HasPrefix(goType, "map[") {
 			return "Record<string, unknown>"
@@ -87,14 +97,12 @@ func GoToTSType(goType string) string {
 			return "(...args: unknown[]) => unknown"
 		}
 		if strings.HasPrefix(goType, "*") {
-			return GoToTSType(goType[1:])
+			return goToTSTypeWithContext(goType[1:], knownStructs)
 		}
-		// Handle variadic types (e.g. "...any" or "...int")
+		// Handle variadic types
 		if strings.HasPrefix(goType, "...") {
-			// Return the base type array (e.g. "any[]")
-			// The generator will handle the rest parameter syntax
 			baseType := goType[3:]
-			return GoToTSType(baseType) + "[]"
+			return goToTSTypeWithContext(baseType, knownStructs) + "[]"
 		}
 		// Handle channels
 		if strings.HasPrefix(goType, "chan ") || strings.HasPrefix(goType, "<-chan ") || strings.HasPrefix(goType, "chan<- ") {
@@ -104,6 +112,11 @@ func GoToTSType(goType string) string {
 		if strings.HasPrefix(goType, "struct{") {
 			return "any"
 		}
+		// Check if it's a known struct from this package
+		if knownStructs != nil && knownStructs[goType] {
+			return goType // Return as-is, it will reference the interface
+		}
+		// Return the type name (may be a struct from this package)
 		return goType
 	}
 }
@@ -190,14 +203,22 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct, pkgP
 
 		if st.Fields != nil {
 			for _, field := range st.Fields.List {
+				goType := types.ExprString(field.Type)
+
+				// Embedded field (no name) - capture for interface extension
 				if len(field.Names) == 0 {
+					embedType := strings.TrimPrefix(goType, "*")
+					// Only add if it looks like a struct type (capitalized)
+					if len(embedType) > 0 && embedType[0] >= 'A' && embedType[0] <= 'Z' {
+						exported.Embeds = append(exported.Embeds, embedType)
+					}
 					continue
 				}
+
 				for _, name := range field.Names {
 					if !ast.IsExported(name.Name) {
 						continue
 					}
-					goType := types.ExprString(field.Type)
 
 					// Resolve import path
 					var importPath string
@@ -225,6 +246,7 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct, pkgP
 						ImportPath: importPath,
 					})
 				}
+
 			}
 		}
 

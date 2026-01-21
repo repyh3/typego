@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.4.0] - 2026-01-21
+
+### TypeGo Package Ecosystem
+- **New Project Architecture**: Unified project structure with `typego.modules.json` manifest and `.typego/` hidden workspace.
+- **Dependency Management CLI**: A complete suite of commands for managing Go dependencies:
+    - `typego add <pkg>[@version]`: Adds Go modules to the project and triggers auto-type generation.
+    - `typego remove <pkg>`: Cleanly removes dependencies and updates types.
+    - `typego list`: Visualizes the dependency tree and current versions.
+    - `typego update/outdated`: Tools for keeping Go modules up to date.
+    - `typego install`: Manually triggers JIT build, dependency resolution, and type syncing.
+- **Reproducible Builds**: Introduced `typego.lock` to pin resolved Go module versions across different environments.
+- **JIT Infrastructure**: Automated workspace management with `go mod tidy` integration and checksum-based stale detection for faster re-installs.
+
+### Smarter Type Linker
+- **Recursive Type Discovery**: Automatically discovers and generates TypeScript interfaces for structs/interfaces returned by functions or nested in fields.
+- **Go Struct Embedding**: Mirrored struct embedding in TypeScript using the `extends` keyword (e.g., `Engine extends RouterGroup`).
+- **Local Reference Resolution**: Correctly resolves and links internal struct references within the same package.
+- **Convention Alignment**: Standard library types (e.g., `go:net/http`) now use Go-style PascalCase properties (`Method`, `URL`, `Header`) for consistency with auto-generated external types.
+
+### CLI & DX Improvements
+- **CLI Restructuring**: Refactored the internal CLI architecture for better maintainability and extensibility.
+- **Automated Workflows**: Automatic type regeneration on `add` and `install` commands.
+- **Enhanced Scaffolding**: `typego init` now generates a production-ready setup including `.gitignore` and pre-configured `tsconfig.json`.
+
+### Changed
+- Replaced manual JIT build logic with a unified `installer` package.
+- Updated `typego run` to check for module staleness before execution.
+
 ## [v1.3.1] - 2026-01-21
 
 ### Fixed

@@ -1,4 +1,4 @@
-package cli
+package cmd
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ const (
 	colorGray   = "\033[90m"
 )
 
-var devCmd = &cobra.Command{
+var DevCmd = &cobra.Command{
 	Use:   "dev [file]",
 	Short: "Start development server with hot-reload",
 	Long: `Start a development server that watches for file changes and automatically
@@ -180,5 +180,5 @@ func printError(format string, args ...interface{}) {
 }
 
 func init() {
-	RootCmd.AddCommand(devCmd)
+	// Registered in root.go
 }

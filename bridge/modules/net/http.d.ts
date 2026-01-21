@@ -6,15 +6,18 @@ declare module "go:net/http" {
     export function Fetch(url: string): Promise<{ Status: string; StatusCode: number; Body: string }>;
 
     export interface Request {
-        method: string;
-        url: string;
-        path: string;
-        host: string;
-        proto: string;
-        query: Record<string, string | string[]>;
-        headers: Record<string, string | string[]>;
-        body(): Promise<string>;
-        bodySync(): string;
+        Method: string;
+        URL: {
+            Path: string;
+            RawQuery: string;
+            Host: string;
+        };
+        Host: string;
+        Proto: string;
+        Header: Record<string, string[]>;
+        Body: any;
+        ContentLength: number;
+        RemoteAddr: string;
     }
 
     export interface Response {

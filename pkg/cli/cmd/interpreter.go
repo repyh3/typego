@@ -1,4 +1,4 @@
-package cli
+package cmd
 
 import (
 	"fmt"
@@ -8,6 +8,9 @@ import (
 	"github.com/repyh/typego/compiler"
 	"github.com/repyh/typego/engine"
 )
+
+// MemoryLimit is exported for use by core commands (set in root.go)
+var MemoryLimit uint64 = 128
 
 // runInterpreter executes TypeScript directly using the embedded Goja engine.
 // This is the fast path - no Go compilation required.

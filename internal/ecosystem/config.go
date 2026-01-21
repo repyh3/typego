@@ -6,6 +6,26 @@ import (
 )
 
 const ConfigFileName = "typego.modules.json"
+const LockFileName = "typego.lock"
+
+// Lockfile captures resolved versions for reproducible builds
+type Lockfile struct {
+	LockfileVersion int                        `json:"lockfileVersion"`
+	Resolved        map[string]ResolvedPackage `json:"resolved"`
+}
+
+// ResolvedPackage contains the exact version resolved by go get
+type ResolvedPackage struct {
+	Version string `json:"version"`
+}
+
+// DefaultLockfile creates an empty lockfile
+func DefaultLockfile() Lockfile {
+	return Lockfile{
+		LockfileVersion: 1,
+		Resolved:        make(map[string]ResolvedPackage),
+	}
+}
 
 // ModuleConfig represents the schema for typego.modules.json
 type ModuleConfig struct {

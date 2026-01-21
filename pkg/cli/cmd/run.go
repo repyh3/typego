@@ -1,4 +1,4 @@
-package cli
+package cmd
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ import (
 
 var compileMode bool
 
-var runCmd = &cobra.Command{
+var RunCmd = &cobra.Command{
 	Use:   "run [file]",
 	Short: "Run a TypeScript file",
 	Long: `Run a TypeScript file using the TypeGo engine.
@@ -64,8 +64,8 @@ Use --compile to generate a standalone Go binary (slower, but more portable).`,
 }
 
 func init() {
-	RootCmd.AddCommand(runCmd)
-	runCmd.Flags().BoolVarP(&compileMode, "compile", "c", false, "Compile to standalone binary (slower)")
+	// Registered in root.go
+	RunCmd.Flags().BoolVarP(&compileMode, "compile", "c", false, "Compile to standalone binary (slower)")
 }
 
 // runStandalone compiles the TypeScript to a standalone Go binary and runs it.

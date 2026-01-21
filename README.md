@@ -15,12 +15,11 @@ Unlike typical runtimes that communicate over IPC or JSON-RPC, typego runs a JS 
 
 ## Features
 
-- **True Parallelism**: Goroutine-based workers that run in parallel, not just concurrently.
-- **Single Binary**: Compiles TypeScript + Go runtime into one executable. No `node_modules`.
-- **Shared Memory**: Zero-copy ArrayBuffers between workers with mutex protection.
-- **Go Imports**: Use Go's standard library directly (`go:fmt`, `go:net/http`, `go:sync`).
-- **NPM Compatible**: Standard NPM packages work via esbuild bundling.
-- **Fast Interpreter**: Default mode executes in ~0.2s. Use `--compile` for standalone binaries.
+- **Direct Go Integration**: Import any Go package as a native TS module (`go:fmt`, `go:github.com/gin-gonic/gin`).
+- **Smarter Type Linker**: Automatic, recursive type generation for Go structs, interfaces, and methods. Supports struct embedding (`extends`) and nested type resolution.
+- **True Parallelism**: Goroutine-based workers with zero-copy shared memory (`typego:memory`).
+- **Modern Package Ecosystem**: Built-in CLI for managing Go dependencies with `typego.modules.json` and `typego.lock`.
+- **Fast Developer Loop**: Hot-reloading dev server and ~0.2s interpreter startup. Compiles to single-binary with `--compile`.
 
 ## Tech Stack
 
@@ -50,9 +49,9 @@ typego run src/index.ts
 A standard TypeGo project consists of the following structure:
 
 - `src/`: Directory for your TypeScript source files.
-- `typego.modules.json`: Configuration for external Go dependencies and toolchain settings.
-- `tsconfig.json`: TypeScript compiler configuration (pre-configured for Go imports).
-- `.typego/`: **[Internal]** Hidden workspace for JIT-compiled binaries, generated types, and build cache. This directory is automatically managed and ignored by Git.
+- `typego.modules.json`: Dependency manifest for Go packages.
+- `typego.lock`: **[New]** Auto-generated lockfile for reproducible Go module versions.
+- `.typego/`: **[Internal]** Managed workspace for build artifacts and cached TypeScript types (`go.d.ts`).
 - `package.json`: Standard Node.js manifest for NPM dependencies (handled via esbuild).
 
 ### Commands
@@ -61,11 +60,35 @@ A standard TypeGo project consists of the following structure:
 |---------|-------------|
 | `typego run <file>` | Execute TypeScript (fast interpreter mode) |
 | `typego dev <file>` | Development server with hot-reload |
-| `typego run --compile <file>` | Compile and run as standalone binary |
-| `typego build <file> -o <out>` | Build standalone executable |
-| `typego build <file> --target` | Cross-compile (e.g. linux-amd64) |
+| `typego build <file>` | Build standalone executable |
+| `typego init [name]` | Scaffold new project (`--npm` for Node interop) |
 | `typego types` | Generate `.d.ts` for Go imports |
-| `typego init <name>` | Scaffold new project |
+| `typego add <pkg>` | Add a Go module dependency |
+| `typego remove <pkg>` | Remove a Go module dependency |
+| `typego list` | List configured Go dependencies |
+| `typego update` | Update Go modules to latest versions |
+| `typego outdated` | Check for newer Go module versions |
+| `typego install` | Manually trigger JIT build/dependency resolution |
+| `typego clean` | Reset build cache and temporary workspace |
+
+### Package Management
+
+TypeGo uses a `typego.modules.json` file to manage Go dependencies. This allows you to use any Go package in your TypeScript code.
+
+```bash
+# Add a Go package. Ecosystem will automatically resolve versions and sync types.
+typego add github.com/gin-gonic/gin
+```
+```typescript
+// src/index.ts
+import { Default } from "go:github.com/gin-gonic/gin";
+
+const app = Default();
+app.GET("/ping", (c) => c.JSON(200, { message: "pong" }));
+app.Run();
+```
+
+TypeGo automatically manages a `.typego/` workspace, handling `go mod tidy`, JIT compilation, and TypeScript definition syncing behind the scenes.
 
 ## Examples
 

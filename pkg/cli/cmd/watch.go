@@ -1,4 +1,4 @@
-package cli
+package cmd
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var watchCmd = &cobra.Command{
+var WatchCmd = &cobra.Command{
 	Use:   "watch [file]",
 	Short: "Run a file and restart on changes",
 	Args:  cobra.ExactArgs(1),
@@ -104,5 +104,5 @@ func getLastMod(file string) time.Time {
 }
 
 func init() {
-	RootCmd.AddCommand(watchCmd)
+	// Registered in root.go
 }

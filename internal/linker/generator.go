@@ -37,6 +37,12 @@ func GenerateShim(info *PackageInfo, variableName string) string {
 func GenerateTypes(info *PackageInfo) string {
 	var sb strings.Builder
 
+	// Build known structs map for type resolution
+	knownStructs := make(map[string]bool)
+	for _, st := range info.Structs {
+		knownStructs[st.Name] = true
+	}
+
 	sb.WriteString(fmt.Sprintf("// MODULE: go:%s\n", info.ImportPath))
 	sb.WriteString(fmt.Sprintf("declare module \"go:%s\" {\n", info.ImportPath))
 
@@ -48,15 +54,12 @@ func GenerateTypes(info *PackageInfo) string {
 				if imports[field.ImportPath] == nil {
 					imports[field.ImportPath] = make(map[string]bool)
 				}
-				// Extract type name from Go type (e.g. "*http.Client" -> "Client")
 				typeName := field.Type
 				if idx := strings.LastIndex(typeName, "."); idx != -1 {
 					typeName = typeName[idx+1:]
 				}
 				typeName = strings.TrimPrefix(typeName, "*")
-				// Remove array brackets if present
 				typeName = strings.ReplaceAll(typeName, "[]", "")
-
 				imports[field.ImportPath][typeName] = true
 			}
 		}
@@ -75,11 +78,11 @@ func GenerateTypes(info *PackageInfo) string {
 	}
 
 	for _, st := range info.Structs {
-		sb.WriteString(generateStructInterface(st))
+		sb.WriteString(generateStructInterfaceWithContext(st, knownStructs))
 	}
 
 	for _, fn := range info.Exports {
-		sb.WriteString(generateFunctionDecl(fn))
+		sb.WriteString(generateFunctionDeclWithContext(fn, knownStructs))
 	}
 
 	sb.WriteString("}\n")
@@ -87,7 +90,7 @@ func GenerateTypes(info *PackageInfo) string {
 	return sb.String()
 }
 
-func generateStructInterface(st ExportedStruct) string {
+func generateStructInterfaceWithContext(st ExportedStruct, knownStructs map[string]bool) string {
 	var sb strings.Builder
 
 	if st.Doc != "" {
@@ -98,16 +101,31 @@ func generateStructInterface(st ExportedStruct) string {
 		sb.WriteString("\t */\n")
 	}
 
-	// Format interface name with generics: export interface Box<T> {
 	interfaceName := st.Name
 	if len(st.TypeParams) > 0 {
 		interfaceName += "<" + strings.Join(st.TypeParams, ", ") + ">"
 	}
-	sb.WriteString(fmt.Sprintf("\texport interface %s {\n", interfaceName))
+
+	// Handle embedded types with extends clause
+	if len(st.Embeds) > 0 {
+		// Filter to only include known structs from this package
+		var validEmbeds []string
+		for _, embed := range st.Embeds {
+			if knownStructs == nil || knownStructs[embed] {
+				validEmbeds = append(validEmbeds, embed)
+			}
+		}
+		if len(validEmbeds) > 0 {
+			sb.WriteString(fmt.Sprintf("\texport interface %s extends %s {\n", interfaceName, strings.Join(validEmbeds, ", ")))
+		} else {
+			sb.WriteString(fmt.Sprintf("\texport interface %s {\n", interfaceName))
+		}
+	} else {
+		sb.WriteString(fmt.Sprintf("\texport interface %s {\n", interfaceName))
+	}
 
 	for _, field := range st.Fields {
-		tsType := field.TSType
-		// If imported, strip the package prefix
+		tsType := GoToTSTypeWithStructs(field.Type, knownStructs)
 		if field.ImportPath != "" {
 			if idx := strings.LastIndex(tsType, "."); idx != -1 {
 				tsType = tsType[idx+1:]
@@ -117,14 +135,14 @@ func generateStructInterface(st ExportedStruct) string {
 	}
 
 	for _, method := range st.Methods {
-		sb.WriteString(generateMethodSignature(method))
+		sb.WriteString(generateMethodSignatureWithContext(method, knownStructs))
 	}
 
 	sb.WriteString("\t}\n\n")
 	return sb.String()
 }
 
-func generateMethodSignature(m MethodInfo) string {
+func generateMethodSignatureWithContext(m MethodInfo, knownStructs map[string]bool) string {
 	var args []string
 	for i, arg := range m.Args {
 		name := arg.Name
@@ -132,7 +150,7 @@ func generateMethodSignature(m MethodInfo) string {
 			name = fmt.Sprintf("arg%d", i)
 		}
 
-		tsType := GoToTSType(arg.Type)
+		tsType := GoToTSTypeWithStructs(arg.Type, knownStructs)
 		if strings.HasPrefix(arg.Type, "...") {
 			name = "..." + name
 		}
@@ -143,11 +161,11 @@ func generateMethodSignature(m MethodInfo) string {
 	retType := "void"
 	if len(m.Returns) > 0 {
 		if len(m.Returns) == 1 {
-			retType = GoToTSType(m.Returns[0])
+			retType = GoToTSTypeWithStructs(m.Returns[0], knownStructs)
 		} else {
 			var types []string
 			for _, r := range m.Returns {
-				types = append(types, GoToTSType(r))
+				types = append(types, GoToTSTypeWithStructs(r, knownStructs))
 			}
 			retType = "[" + strings.Join(types, ", ") + "]"
 		}
@@ -165,7 +183,7 @@ func generateMethodSignature(m MethodInfo) string {
 	return sb.String()
 }
 
-func generateFunctionDecl(fn ExportedFunc) string {
+func generateFunctionDeclWithContext(fn ExportedFunc, knownStructs map[string]bool) string {
 	var sb strings.Builder
 
 	if fn.Doc != "" {
@@ -183,7 +201,7 @@ func generateFunctionDecl(fn ExportedFunc) string {
 			name = fmt.Sprintf("arg%d", i)
 		}
 
-		tsType := GoToTSType(arg.Type)
+		tsType := GoToTSTypeWithStructs(arg.Type, knownStructs)
 		if strings.HasPrefix(arg.Type, "...") {
 			name = "..." + name
 		}
@@ -193,27 +211,20 @@ func generateFunctionDecl(fn ExportedFunc) string {
 
 	retType := "void"
 
-	// Goja runtime behavior:
-	// - If (T, error), returns T or throws exception
-	// - If (T1, T2, error), returns [T1, T2] or throws exception
-	// - If method (via reflection.go), returns [T, Error] always
-
-	// Create a copy of returns to manipulate
 	returns := make([]string, len(fn.Ret))
 	copy(returns, fn.Ret)
 
-	// If last return is error, drop it (Goja throws it)
 	if len(returns) > 0 && returns[len(returns)-1] == "error" {
 		returns = returns[:len(returns)-1]
 	}
 
 	if len(returns) > 0 {
 		if len(returns) == 1 {
-			retType = GoToTSType(returns[0])
+			retType = GoToTSTypeWithStructs(returns[0], knownStructs)
 		} else {
 			var types []string
 			for _, r := range returns {
-				types = append(types, GoToTSType(r))
+				types = append(types, GoToTSTypeWithStructs(r, knownStructs))
 			}
 			retType = "[" + strings.Join(types, ", ") + "]"
 		}

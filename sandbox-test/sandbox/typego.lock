@@ -1,0 +1,8 @@
+{
+  "lockfileVersion": 1,
+  "resolved": {
+    "github.com/gin-gonic/gin": {
+      "version": "v1.11.0"
+    }
+  }
+}

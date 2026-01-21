@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "github.com/gin-gonic/gin": "latest",
+    "github.com/teris-io/shortid": "latest"
+  },
+  "compiler": {
+    "goVersion": "1.24"
+  }
+}

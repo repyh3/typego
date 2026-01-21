@@ -21,9 +21,7 @@ const (
 	BinaryName     = "typego-app.exe"
 )
 
-// RunInstall executes the installation process
 func RunInstall(cwd string) error {
-	// 1. Read Config
 	configPath := filepath.Join(cwd, ConfigFileName)
 	configData, err := os.ReadFile(configPath)
 	if err != nil {
@@ -41,7 +39,6 @@ func RunInstall(cwd string) error {
 		return fmt.Errorf("invalid config: %w", err)
 	}
 
-	// 2. Setup Hidden Directory
 	hiddenDir := filepath.Join(cwd, HiddenDirName)
 	if _, err := os.Stat(hiddenDir); os.IsNotExist(err) {
 		if err := os.Mkdir(hiddenDir, 0755); err != nil {
@@ -49,9 +46,7 @@ func RunInstall(cwd string) error {
 		}
 	}
 
-	// 3. Scan for Usage (AST Analysis)
-	// For now, let's scan src/*.ts
-	// In reality we should walk the tree.
+	// Scan for go:* imports in TypeScript files
 	files, _ := filepath.Glob(filepath.Join(cwd, "src", "*.ts"))
 	var allUsedModules []string
 
@@ -83,8 +78,6 @@ func RunInstall(cwd string) error {
 		usedMap[m] = true
 	}
 
-	// 4. Resolve Dependencies
-	// Initialize Fetcher to inspect types
 	fetcher, err := linker.NewFetcher()
 	if err != nil {
 		return fmt.Errorf("failed to init fetcher: %w", err)
@@ -94,6 +87,7 @@ func RunInstall(cwd string) error {
 	tsShims := make(map[string]string)
 	var bridgeBlock strings.Builder
 	namedImports := make(map[string]string)
+	var packageInfos []*linker.PackageInfo // For auto-types generation
 
 	fmt.Println("📦 Resolving dependencies...")
 
@@ -121,75 +115,65 @@ func RunInstall(cwd string) error {
 	requireCmd.Dir = workDir
 	_ = requireCmd.Run()
 
-	tidyCmd := exec.Command("go", "mod", "tidy")
-	tidyCmd.Dir = workDir
-	tidyCmd.Env = append(os.Environ(), "GOPROXY=off") // Force local resolution
-	if err := tidyCmd.Run(); err != nil {
-		fmt.Printf("⚠️ go mod tidy failed: %v\n", err)
-	}
-
-	// Filter imports that are external
+	// Process external go:* imports
 	for m := range usedMap {
 		if len(m) > 3 && m[:3] == "go:" {
 			cleanName := m[3:]
 
-			// Skip internal
+			// Skip internal/stdlib packages
 			switch cleanName {
 			case "fmt", "os", "sync", "net/http", "memory", "crypto":
 				continue
 			}
 
-			// Check if allowed in config
-			// config.Dependencies keys should match
-			// We iterate config to find matches or just try to allow any if config is empty?
-			// Strict mode: Only allow if in config.
-			// Loose mode: Allow all found.
-
-			// For MVP: Check config. If config has it, use version from config.
+			// Check if in config, warn if not
 			if _, ok := config.Dependencies[cleanName]; !ok {
-				fmt.Printf("⚠️  Warning: %s is used but not listed in %s\n", cleanName, ConfigFileName)
-				// We can still try to install it with "latest"
+				fmt.Printf("⚠️  Warning: %s is used but not in %s\n", cleanName, ConfigFileName)
 			}
 
-			// Go Get
-			// If we have version in config, use it.
+			// Determine version
 			version := "latest"
 			if v, ok := config.Dependencies[cleanName]; ok {
 				version = v
 			}
 
-			// run go get in workDir
-			fmt.Printf("   Getting %s@%s...\n", cleanName, version)
+			// Fetch the package
+			fmt.Printf("   📥 Getting %s@%s...\n", cleanName, version)
 			if err := resolver.RunGoGet(workDir, []string{cleanName + "@" + version}); err != nil {
 				return fmt.Errorf("failed to get %s: %w", cleanName, err)
 			}
 
-			// Inspect for Shim Generation
-			// We can inspect in workDir!
+			// Inspect for shim generation
 			if info, err := linker.Inspect(cleanName, workDir); err == nil {
-				// Generate TS Shim for Compiler
 				tsShims[m] = linker.GenerateTSShim(info)
-
-				// Generate Go Bridge for Engine
 				bridgeBlock.WriteString(linker.GenerateShim(info, "pkg_"+info.Name))
-
 				namedImports[cleanName] = info.Name
+				packageInfos = append(packageInfos, info) // Collect for types
 			} else {
-				fmt.Printf("   Failed to inspect %s: %v\n", cleanName, err)
+				fmt.Printf("   ⚠️  Failed to inspect %s: %v\n", cleanName, err)
 			}
 		}
 	}
 
-	// Also get typego/engine and cmd/typego in workDir
-	// resolver.RunGoGet(workDir, "github.com/repyh/typego@latest") // or replace if dev
-
-	// 5. Scaffold main.go
+	// Scaffold main.go before tidy so go mod tidy sees the imports
 	fmt.Println("🏗️  Scaffolding binary...")
 	if err := builder.ScaffoldMain(workDir, namedImports, tsShims, bridgeBlock.String()); err != nil {
 		return err
 	}
 
-	// 6. Compile
+	fmt.Println("🧹 Resolving dependencies...")
+	tidyCmd := exec.Command("go", "mod", "tidy")
+	tidyCmd.Dir = workDir
+	// Allow transitive dependency resolution even with local replacement
+	if err := tidyCmd.Run(); err != nil {
+		// Output the error from tidy if it fails
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			fmt.Printf("⚠️ go mod tidy failed: %s\n", string(exitErr.Stderr))
+		} else {
+			fmt.Printf("⚠️ go mod tidy failed: %v\n", err)
+		}
+	}
+
 	fmt.Println("🔨 Compiling JIT binary...")
 	binDir := filepath.Join(hiddenDir, "bin")
 	if err := builder.CompileBinary(workDir, binDir, BinaryName); err != nil {
@@ -207,5 +191,77 @@ func RunInstall(cwd string) error {
 		_ = ecosystem.WriteChecksum(cwd, hash)
 	}
 
+	// Generate lockfile from resolved go.mod
+	writeLockfile(cwd, workDir, config.Dependencies)
+
+	// Auto-generate types
+	if len(packageInfos) > 0 {
+		fmt.Println("📦 Syncing type definitions...")
+		writeTypeDefinitions(cwd, packageInfos)
+	}
+
 	return nil
+}
+
+func writeLockfile(projectRoot, workDir string, deps map[string]string) {
+	goModPath := filepath.Join(workDir, "go.mod")
+	data, err := os.ReadFile(goModPath)
+	if err != nil {
+		return
+	}
+
+	lockfile := ecosystem.DefaultLockfile()
+
+	// Parse require directives to extract resolved versions
+	lines := strings.Split(string(data), "\n")
+	inRequire := false
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "require (" {
+			inRequire = true
+			continue
+		}
+		if line == ")" {
+			inRequire = false
+			continue
+		}
+		if inRequire && len(line) > 0 && !strings.HasPrefix(line, "//") {
+			parts := strings.Fields(line)
+			if len(parts) >= 2 {
+				pkgPath := parts[0]
+				version := parts[1]
+				// Only include user dependencies, not transitive
+				if _, isDep := deps[pkgPath]; isDep {
+					lockfile.Resolved[pkgPath] = ecosystem.ResolvedPackage{Version: version}
+				}
+			}
+		}
+	}
+
+	if len(lockfile.Resolved) == 0 {
+		return
+	}
+
+	lockData, _ := json.MarshalIndent(lockfile, "", "  ")
+	lockPath := filepath.Join(projectRoot, ecosystem.LockFileName)
+	_ = os.WriteFile(lockPath, lockData, 0644)
+	fmt.Printf("🔒 Lockfile written to %s\n", ecosystem.LockFileName)
+}
+
+func writeTypeDefinitions(projectRoot string, infos []*linker.PackageInfo) {
+	typesDir := filepath.Join(projectRoot, ".typego", "types")
+	_ = os.MkdirAll(typesDir, 0755)
+
+	var sb strings.Builder
+	for _, info := range infos {
+		sb.WriteString(linker.GenerateTypes(info))
+		sb.WriteString("\n")
+	}
+
+	if sb.Len() > 0 {
+		outPath := filepath.Join(typesDir, "go.d.ts")
+		// Append to existing file if present
+		existing, _ := os.ReadFile(outPath)
+		_ = os.WriteFile(outPath, append(existing, []byte(sb.String())...), 0644)
+	}
 }

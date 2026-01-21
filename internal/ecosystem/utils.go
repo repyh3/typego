@@ -43,26 +43,19 @@ func IsHandoffRequired(cwd string) bool {
 func EnsureGitIgnore(cwd string) error {
 	gitIgnorePath := filepath.Join(cwd, ".gitignore")
 
-	// If .gitignore doesn't exist, we don't strictly need to create it,
-	// but it's good practice. However, let's only append if it exists.
-	if _, err := os.Stat(gitIgnorePath); os.IsNotExist(err) {
-		return nil // No .gitignore, nothing to do
-	}
-
+	// Read existing content if it exists
 	content, err := os.ReadFile(gitIgnorePath)
-	if err != nil {
-		return err
-	}
-
-	lines := strings.Split(string(content), "\n")
-	for _, line := range lines {
-		if strings.TrimSpace(line) == HiddenDirName || strings.TrimSpace(line) == HiddenDirName+"/" {
-			return nil // Already ignored
+	if err == nil {
+		lines := strings.Split(string(content), "\n")
+		for _, line := range lines {
+			if strings.TrimSpace(line) == HiddenDirName || strings.TrimSpace(line) == HiddenDirName+"/" {
+				return nil // Already ignored
+			}
 		}
 	}
 
-	// Append to file
-	f, err := os.OpenFile(gitIgnorePath, os.O_APPEND|os.O_WRONLY, 0644)
+	// Create or Append to file
+	f, err := os.OpenFile(gitIgnorePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

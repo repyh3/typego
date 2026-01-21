@@ -1,4 +1,4 @@
-package cli
+package cmd
 
 import (
 	"fmt"
@@ -28,7 +28,7 @@ var supportedTargets = map[string]struct{ goos, goarch string }{
 	"windows-amd64": {"windows", "amd64"},
 }
 
-var buildCmd = &cobra.Command{
+var BuildCmd = &cobra.Command{
 	Use:   "build [file]",
 	Short: "Build and bundle a TypeScript file for production",
 	Args:  cobra.ExactArgs(1),
@@ -222,8 +222,8 @@ go 1.23.6
 }
 
 func init() {
-	buildCmd.Flags().StringVarP(&buildOut, "out", "o", "dist/index.js", "Output bundle path")
-	buildCmd.Flags().BoolVarP(&minify, "minify", "m", false, "Minify output")
-	buildCmd.Flags().StringVarP(&buildTarget, "target", "t", "", "Cross-compilation target (e.g. linux-amd64)")
-	RootCmd.AddCommand(buildCmd)
+	BuildCmd.Flags().StringVarP(&buildOut, "out", "o", "dist/index.js", "Output bundle path")
+	BuildCmd.Flags().BoolVarP(&minify, "minify", "m", false, "Minify output")
+	BuildCmd.Flags().StringVarP(&buildTarget, "target", "t", "", "Cross-compilation target (e.g. linux-amd64)")
+	// Registered in root.go
 }
