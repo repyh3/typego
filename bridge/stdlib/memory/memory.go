@@ -6,8 +6,8 @@ import (
 	"sync" // standard sync
 
 	"github.com/dop251/goja"
-	modulesync "github.com/repyh3/typego/bridge/modules/sync" // TypeGo sync module
-	"github.com/repyh3/typego/eventloop"
+	modulesync "github.com/repyh/typego/bridge/modules/sync" // TypeGo sync module
+	"github.com/repyh/typego/eventloop"
 )
 
 // SharedSegment represents a named block of memory shared between Go and JS.

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/repyh3/typego/bridge/core"
-	"github.com/repyh3/typego/eventloop"
+	"github.com/repyh/typego/bridge/core"
+	"github.com/repyh/typego/eventloop"
 )
 
 func init() {

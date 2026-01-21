@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/repyh3/typego/bridge/polyfills"
-	"github.com/repyh3/typego/compiler"
-	"github.com/repyh3/typego/engine"
+	"github.com/repyh/typego/bridge/polyfills"
+	"github.com/repyh/typego/compiler"
+	"github.com/repyh/typego/engine"
 )
 
 // runInterpreter executes TypeScript directly using the embedded Goja engine.

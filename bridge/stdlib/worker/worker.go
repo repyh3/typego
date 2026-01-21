@@ -3,7 +3,7 @@ package worker
 
 import (
 	"github.com/dop251/goja"
-	"github.com/repyh3/typego/eventloop"
+	"github.com/repyh/typego/eventloop"
 )
 
 // Handle represents a running worker.

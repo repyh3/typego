@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/repyh3/typego/engine"
+	"github.com/repyh/typego/engine"
 )
 
 // TestHarness bundles common test infrastructure

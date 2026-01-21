@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/repyh3/typego/compiler"
-	"github.com/repyh3/typego/internal/builder"
-	"github.com/repyh3/typego/internal/linker"
+	"github.com/repyh/typego/compiler"
+	"github.com/repyh/typego/internal/builder"
+	"github.com/repyh/typego/internal/linker"
 	"github.com/spf13/cobra"
 )
 
@@ -136,21 +136,21 @@ go 1.23.6
 	absCwd, _ := filepath.Abs(cwd)
 	isLocalDev := false
 	if data, err := os.ReadFile(filepath.Join(absCwd, "go.mod")); err == nil {
-		if strings.Contains(string(data), "module github.com/repyh3/typego") {
+		if strings.Contains(string(data), "module github.com/repyh/typego") {
 			isLocalDev = true
 		}
 	}
 
 	if isLocalDev {
 		fmt.Println("🔧 typego dev mode: using local source replacement")
-		replaceCmd := exec.Command("go", "mod", "edit", "-replace", "github.com/repyh3/typego="+absCwd)
+		replaceCmd := exec.Command("go", "mod", "edit", "-replace", "github.com/repyh/typego="+absCwd)
 		replaceCmd.Dir = tmpDir
 		_ = replaceCmd.Run()
 	}
 
 	// Fetch dependencies (only root package needed, engine pulls in all subpackages)
 	fmt.Print("⏳ Resolving dependencies...")
-	getCmd := exec.Command("go", "get", "github.com/repyh3/typego/engine")
+	getCmd := exec.Command("go", "get", "github.com/repyh/typego/engine")
 	getCmd.Dir = tmpDir
 	if isLocalDev {
 		getCmd.Env = append(os.Environ(), "GOPROXY=off")

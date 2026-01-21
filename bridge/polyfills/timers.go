@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/repyh3/typego/eventloop"
+	"github.com/repyh/typego/eventloop"
 )
 
 // EnableTimers injects setTimeout and setInterval globals

@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/dop251/goja"
-	"github.com/repyh3/typego/bridge/stdlib/worker"
-	"github.com/repyh3/typego/compiler"
+	"github.com/repyh/typego/bridge/stdlib/worker"
+	"github.com/repyh/typego/compiler"
 )
 
 type WorkerInstance struct {

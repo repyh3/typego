@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/repyh3/typego/internal/builder"
+	"github.com/repyh/typego/internal/builder"
 )
 
 func TestShimTemplate_Validity(t *testing.T) {
 	// Mock values for the template
-	imports := `_ "github.com/repyh3/typego/bridge/modules/fmt"`
+	imports := `_ "github.com/repyh/typego/bridge/modules/fmt"`
 	jsCode := `"console.log('hello')"`
 	bindings := "// bindings"
 	memLimit := 64 * 1024 * 1024

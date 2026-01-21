@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/repyh3/typego/engine"
+	"github.com/repyh/typego/engine"
 )
 
 func TestEngine_Init(t *testing.T) {

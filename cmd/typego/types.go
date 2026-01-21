@@ -7,14 +7,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/repyh3/typego/bridge/core"
-	bridge_crypto "github.com/repyh3/typego/bridge/modules/crypto"
-	bridge_net "github.com/repyh3/typego/bridge/modules/net"
-	bridge_sync "github.com/repyh3/typego/bridge/modules/sync"
-	bridge_memory "github.com/repyh3/typego/bridge/stdlib/memory"
-	bridge_worker "github.com/repyh3/typego/bridge/stdlib/worker"
-	"github.com/repyh3/typego/compiler"
-	"github.com/repyh3/typego/internal/linker"
+	"github.com/repyh/typego/bridge/core"
+	bridge_crypto "github.com/repyh/typego/bridge/modules/crypto"
+	bridge_net "github.com/repyh/typego/bridge/modules/net"
+	bridge_sync "github.com/repyh/typego/bridge/modules/sync"
+	bridge_memory "github.com/repyh/typego/bridge/stdlib/memory"
+	bridge_worker "github.com/repyh/typego/bridge/stdlib/worker"
+	"github.com/repyh/typego/compiler"
+	"github.com/repyh/typego/internal/linker"
 	"github.com/spf13/cobra"
 )
 
@@ -133,7 +133,7 @@ var typesCmd = &cobra.Command{
 			}
 
 			// specific internal modules don't need fetching if we are in the repo
-			isInternal := strings.HasPrefix(pkgPath, "github.com/repyh3/typego")
+			isInternal := strings.HasPrefix(pkgPath, "github.com/repyh/typego")
 			if !isInternal {
 				if err := fetcher.Get(pkgPath); err != nil {
 					fmt.Printf("Warning: Failed to fetch %s: %v\n", pkgPath, err)

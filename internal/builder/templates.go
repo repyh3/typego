@@ -17,8 +17,8 @@ import (
 	%[1]s
 
 	"github.com/dop251/goja"
-	"github.com/repyh3/typego/bridge/polyfills"
-	"github.com/repyh3/typego/engine"
+	"github.com/repyh/typego/bridge/polyfills"
+	"github.com/repyh/typego/engine"
 )
 
 const jsBundle = %[2]s

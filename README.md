@@ -34,7 +34,7 @@ Unlike typical runtimes that communicate over IPC or JSON-RPC, typego runs a JS 
 ### Installation
 
 ```bash
-go install github.com/repyh3/typego/cmd/typego@latest
+go install github.com/repyh/typego/cmd/typego@latest
 ```
 
 ### Quick Start
@@ -145,7 +145,7 @@ TypeGo is optimized for high-throughput I/O and true parallelism. For a detailed
 ### Building from Source
 
 ```bash
-git clone https://github.com/repyh3/typego.git
+git clone https://github.com/repyh/typego.git
 cd typego
 go build -o typego.exe ./cmd/typego
 ```

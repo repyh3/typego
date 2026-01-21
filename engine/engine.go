@@ -9,18 +9,18 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	"github.com/repyh3/typego/bridge/core"
-	"github.com/repyh3/typego/bridge/stdlib/memory"
-	"github.com/repyh3/typego/bridge/stdlib/worker"
-	"github.com/repyh3/typego/eventloop"
+	"github.com/repyh/typego/bridge/core"
+	"github.com/repyh/typego/bridge/stdlib/memory"
+	"github.com/repyh/typego/bridge/stdlib/worker"
+	"github.com/repyh/typego/eventloop"
 
 	// Import modules to trigger their init() registration
-	_ "github.com/repyh3/typego/bridge/modules/crypto"
-	_ "github.com/repyh3/typego/bridge/modules/fmt"
-	_ "github.com/repyh3/typego/bridge/modules/json"
-	_ "github.com/repyh3/typego/bridge/modules/net"
-	_ "github.com/repyh3/typego/bridge/modules/os"
-	_ "github.com/repyh3/typego/bridge/modules/sync"
+	_ "github.com/repyh/typego/bridge/modules/crypto"
+	_ "github.com/repyh/typego/bridge/modules/fmt"
+	_ "github.com/repyh/typego/bridge/modules/json"
+	_ "github.com/repyh/typego/bridge/modules/net"
+	_ "github.com/repyh/typego/bridge/modules/os"
+	_ "github.com/repyh/typego/bridge/modules/sync"
 )
 
 var ErrMemoryLimitExceeded = errors.New("memory limit exceeded")

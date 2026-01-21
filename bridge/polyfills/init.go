@@ -3,7 +3,7 @@ package polyfills
 
 import (
 	"github.com/dop251/goja"
-	"github.com/repyh3/typego/eventloop"
+	"github.com/repyh/typego/eventloop"
 )
 
 // EnableAll injects all polyfills into the VM:
