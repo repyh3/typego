@@ -108,9 +108,14 @@ func bindMethods(vm *goja.Runtime, obj *goja.Object, v reflect.Value, visited ma
 
 	// @optimized: Use cached method metadata to avoid repeated reflection overhead (NumMethod, IsExported).
 	var methods []methodInfo
-	if cached, ok := typeMethodCache.Load(tPtr); ok {
-		methods = cached.([]methodInfo)
-	} else {
+	cached, loaded := typeMethodCache.Load(tPtr)
+	if loaded {
+		if cachedMethods, ok := cached.([]methodInfo); ok {
+			methods = cachedMethods
+		}
+	}
+
+	if methods == nil {
 		numMethods := tPtr.NumMethod()
 		methods = make([]methodInfo, 0, numMethods)
 		for i := 0; i < numMethods; i++ {
