@@ -7,7 +7,6 @@ import (
 	"github.com/repyh3/typego/eventloop"
 )
 
-// EnableTimers injects setTimeout and setInterval globals
 func EnableTimers(vm *goja.Runtime, el *eventloop.EventLoop) {
 	_ = vm.Set("setTimeout", func(call goja.FunctionCall) goja.Value {
 		fn, _ := goja.AssertFunction(call.Argument(0))

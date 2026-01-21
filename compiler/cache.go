@@ -56,7 +56,6 @@ func getCachePath(filePath string) (string, error) {
 		return "", err
 	}
 
-	// Filename: <filename-base>_<hash>_<version>.json
 	base := filepath.Base(filePath)
 	return filepath.Join(dir, fmt.Sprintf("%s_%s_%s.json", base, hash, CacheVersion)), nil
 }
@@ -95,9 +94,6 @@ func SaveCache(entryPoint string, res *Result) error {
 		JS:        res.JS,
 		SourceMap: res.SourceMap,
 	}
-
-	// We re-compute hash here effectively, or trust the previous computation,
-	// but getCachePath re-computes it, so we are safe.
 
 	data, err := json.Marshal(entry)
 	if err != nil {

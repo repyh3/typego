@@ -65,7 +65,6 @@ var initCmd = &cobra.Command{
 			fmt.Println("Created tsconfig.json")
 		}
 
-		// Initialize NPM
 		if _, err := os.Stat("package.json"); os.IsNotExist(err) {
 			fmt.Println("📦 Initializing NPM...")
 			if err := execShellCmd("npm", "init", "-y"); err != nil {

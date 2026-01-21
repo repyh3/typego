@@ -7,7 +7,6 @@ import (
 	"github.com/dop251/goja"
 )
 
-// Binding represents a Go struct that has been bound to the JavaScript runtime.
 type Binding struct {
 	Name   string
 	Target interface{}
@@ -30,12 +29,10 @@ func bindValue(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Value
 		return goja.Undefined(), nil
 	}
 
-	// Dereference pointers
 	if v.Kind() == reflect.Ptr {
 		if v.IsNil() {
 			return goja.Null(), nil
 		}
-		// Check for circular reference
 		ptr := v.Pointer()
 		if cached, ok := visited[ptr]; ok {
 			return cached, nil
@@ -61,12 +58,10 @@ func bindStruct(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Valu
 	t := v.Type()
 	obj := vm.NewObject()
 
-	// Register in visited map if addressable
 	if v.CanAddr() {
 		visited[v.Addr().Pointer()] = obj
 	}
 
-	// Bind fields
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if !field.IsExported() {
@@ -81,19 +76,16 @@ func bindStruct(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Valu
 		_ = obj.Set(field.Name, jsVal)
 	}
 
-	// Bind methods (need pointer receiver access)
 	bindMethods(vm, obj, v, visited)
 
 	return obj, nil
 }
 
 func bindMethods(vm *goja.Runtime, obj *goja.Object, v reflect.Value, visited map[uintptr]goja.Value) {
-	// Get pointer to struct for pointer receiver methods
 	var vPtr reflect.Value
 	if v.CanAddr() {
 		vPtr = v.Addr()
 	} else {
-		// Create a copy and get its address
 		vCopy := reflect.New(v.Type())
 		vCopy.Elem().Set(v)
 		vPtr = vCopy

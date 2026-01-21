@@ -26,7 +26,6 @@ func (m *fmtModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 // Module implements the go:fmt package bindings.
 type Module struct{}
 
-// Println maps to fmt.Println
 func (f *Module) Println(call goja.FunctionCall) goja.Value {
 	args := make([]interface{}, len(call.Arguments))
 	for i, arg := range call.Arguments {
@@ -36,7 +35,6 @@ func (f *Module) Println(call goja.FunctionCall) goja.Value {
 	return goja.Undefined()
 }
 
-// Printf maps to fmt.Printf
 func (f *Module) Printf(call goja.FunctionCall) goja.Value {
 	format := call.Argument(0).String()
 	args := make([]interface{}, len(call.Arguments)-1)
@@ -47,7 +45,6 @@ func (f *Module) Printf(call goja.FunctionCall) goja.Value {
 	return goja.Undefined()
 }
 
-// Register injects the fmt functions into the runtime
 func Register(vm *goja.Runtime) {
 	f := &Module{}
 

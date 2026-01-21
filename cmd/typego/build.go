@@ -37,19 +37,16 @@ var buildCmd = &cobra.Command{
 
 		fmt.Printf("📦 Building %s...\n", absPath)
 
-		// PASS 1: Scan for imports
 		// We ignore errors here because the virtual modules are not yet populated
 		res, _ := compiler.Compile(absPath, nil)
 
-		// 2. Prepare Temp Directory
 		tmpDir := ".typego_build_tmp"
 		if err := os.MkdirAll(tmpDir, 0755); err != nil {
 			fmt.Printf("Error creating temp dir: %v\n", err)
 			os.Exit(1)
 		}
-		defer os.RemoveAll(tmpDir) // Cleanup
+		defer os.RemoveAll(tmpDir)
 
-		// Initialize Fetcher
 		fetcher, err := linker.NewFetcher()
 		if err != nil {
 			fmt.Printf("Failed to init fetcher: %v\n", err)
@@ -57,7 +54,6 @@ var buildCmd = &cobra.Command{
 		}
 		defer fetcher.Cleanup()
 
-		// 3. Inspect Imports & Generate Virtual Modules
 		virtualModules := make(map[string]string)
 		var bindBlock string
 
@@ -91,7 +87,6 @@ var buildCmd = &cobra.Command{
 			}
 		}
 
-		// PASS 2: Compile with Virtual Modules (Strict)
 		fmt.Println("🔨 Compiling binary (Pass 2)...")
 		res, err = compiler.Compile(absPath, virtualModules)
 		if err != nil {
@@ -120,7 +115,6 @@ var buildCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// 4. Generate go.mod for the shim
 		goModContent := `module typego_app
 
 go 1.23.6
@@ -131,7 +125,6 @@ go 1.23.6
 			os.Exit(1)
 		}
 
-		// Detect Dev Mode
 		cwd, _ := os.Getwd()
 		absCwd, _ := filepath.Abs(cwd)
 		isLocalDev := false
@@ -174,7 +167,6 @@ go 1.23.6
 			_ = getCmd.Run()
 		}
 
-		// 5. Build Binary
 		outputName := buildOut
 		if outputName == "" {
 			outputName = "app.exe"

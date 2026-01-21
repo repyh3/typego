@@ -24,7 +24,6 @@ func (m *syncModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 	Register(vm, el)
 }
 
-// Module implements the go:sync package bindings.
 type Module struct {
 	el *eventloop.EventLoop
 }
@@ -75,7 +74,6 @@ func (m *Module) Sleep(call goja.FunctionCall) goja.Value {
 	return p
 }
 
-// Register injects the sync functions into the runtime
 func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 	m := &Module{el: el}
 	obj := vm.NewObject()
@@ -100,18 +98,15 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 	_ = vm.Set("__go_sync__", obj)
 }
 
-// AsyncMutex wraps a sync.RWMutex with async-friendly locking operations.
 type AsyncMutex struct {
 	mu *sync.RWMutex
 	el *eventloop.EventLoop
 }
 
-// NewAsyncMutex creates an AsyncMutex wrapping the given RWMutex.
 func NewAsyncMutex(mu *sync.RWMutex, el *eventloop.EventLoop) *AsyncMutex {
 	return &AsyncMutex{mu: mu, el: el}
 }
 
-// Lock acquires an exclusive write lock asynchronously.
 func (m *AsyncMutex) Lock(vm *goja.Runtime) goja.Value {
 	p, resolve, _ := m.el.CreatePromise()
 	go func() {
@@ -121,12 +116,10 @@ func (m *AsyncMutex) Lock(vm *goja.Runtime) goja.Value {
 	return p
 }
 
-// Unlock releases a previously acquired write lock.
 func (m *AsyncMutex) Unlock() {
 	m.mu.Unlock()
 }
 
-// RLock acquires a shared read lock asynchronously.
 func (m *AsyncMutex) RLock(vm *goja.Runtime) goja.Value {
 	p, resolve, _ := m.el.CreatePromise()
 	go func() {
@@ -136,12 +129,10 @@ func (m *AsyncMutex) RLock(vm *goja.Runtime) goja.Value {
 	return p
 }
 
-// RUnlock releases a previously acquired read lock.
 func (m *AsyncMutex) RUnlock() {
 	m.mu.RUnlock()
 }
 
-// BindMutex creates a JavaScript object exposing mutex operations.
 func BindMutex(vm *goja.Runtime, mu *sync.RWMutex, el *eventloop.EventLoop) goja.Value {
 	am := NewAsyncMutex(mu, el)
 	obj := vm.NewObject()

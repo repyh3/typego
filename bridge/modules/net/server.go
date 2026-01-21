@@ -13,7 +13,6 @@ import (
 	"github.com/repyh3/typego/eventloop"
 )
 
-// Server wraps http.Server for TypeGo
 type Server struct {
 	server *http.Server
 	el     *eventloop.EventLoop
@@ -21,7 +20,6 @@ type Server struct {
 	mu     sync.Mutex
 }
 
-// NewServer creates a new TypeGo HTTP server
 func NewServer(vm *goja.Runtime, el *eventloop.EventLoop) *Server {
 	return &Server{
 		vm: vm,
@@ -29,7 +27,6 @@ func NewServer(vm *goja.Runtime, el *eventloop.EventLoop) *Server {
 	}
 }
 
-// ListenAndServe starts the HTTP server with a JS handler
 func (s *Server) ListenAndServe(addr string, handler goja.Callable) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -40,7 +37,6 @@ func (s *Server) ListenAndServe(addr string, handler goja.Callable) error {
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Create JS Request and Response wrappers
 			req := s.wrapRequest(r)
 			res := s.wrapResponse(w, r)
 
@@ -48,19 +44,16 @@ func (s *Server) ListenAndServe(addr string, handler goja.Callable) error {
 
 			s.el.RunOnLoop(func() {
 				defer close(done)
-				// Call the JS handler with (req, res)
 				_, err := handler(goja.Undefined(), req, res)
 				if err != nil {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				}
 			})
 
-			// Wait for handler to complete
 			<-done
 		}),
 	}
 
-	// Start server in background
 	s.el.WGAdd(1)
 	go func() {
 		defer s.el.WGDone()
@@ -72,7 +65,6 @@ func (s *Server) ListenAndServe(addr string, handler goja.Callable) error {
 	return nil
 }
 
-// Close shuts down the server gracefully
 func (s *Server) Close(timeout time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -86,18 +78,15 @@ func (s *Server) Close(timeout time.Duration) error {
 	return s.server.Shutdown(ctx)
 }
 
-// wrapRequest creates a JS object representing the HTTP request
 func (s *Server) wrapRequest(r *http.Request) goja.Value {
 	req := s.vm.NewObject()
 
-	// Basic properties
 	_ = req.Set("method", r.Method)
 	_ = req.Set("url", r.URL.String())
 	_ = req.Set("path", r.URL.Path)
 	_ = req.Set("host", r.Host)
 	_ = req.Set("proto", r.Proto)
 
-	// Query parameters
 	query := s.vm.NewObject()
 	for k, v := range r.URL.Query() {
 		if len(v) == 1 {
@@ -108,7 +97,6 @@ func (s *Server) wrapRequest(r *http.Request) goja.Value {
 	}
 	_ = req.Set("query", query)
 
-	// Headers
 	headers := s.vm.NewObject()
 	for k, v := range r.Header {
 		if len(v) == 1 {
@@ -119,12 +107,11 @@ func (s *Server) wrapRequest(r *http.Request) goja.Value {
 	}
 	_ = req.Set("headers", headers)
 
-	// Body reader (async)
 	_ = req.Set("body", func(call goja.FunctionCall) goja.Value {
 		p, resolve, reject := s.el.CreatePromise()
 
 		go func() {
-			body, err := io.ReadAll(io.LimitReader(r.Body, 10*1024*1024)) // 10MB limit
+			body, err := io.ReadAll(io.LimitReader(r.Body, 10*1024*1024))
 			s.el.RunOnLoop(func() {
 				if err != nil {
 					reject(s.vm.NewGoError(err))
@@ -137,7 +124,6 @@ func (s *Server) wrapRequest(r *http.Request) goja.Value {
 		return p
 	})
 
-	// Convenience: get body sync (for small payloads)
 	_ = req.Set("bodySync", func(call goja.FunctionCall) goja.Value {
 		body, err := io.ReadAll(io.LimitReader(r.Body, 10*1024*1024))
 		if err != nil {
@@ -149,13 +135,11 @@ func (s *Server) wrapRequest(r *http.Request) goja.Value {
 	return req
 }
 
-// wrapResponse creates a JS object for writing HTTP responses
 func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value {
 	res := s.vm.NewObject()
 	headersSent := false
 	statusCode := 200
 
-	// Set header
 	_ = res.Set("setHeader", func(call goja.FunctionCall) goja.Value {
 		key := call.Argument(0).String()
 		value := call.Argument(1).String()
@@ -163,13 +147,11 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 		return goja.Undefined()
 	})
 
-	// Set status code
 	_ = res.Set("status", func(call goja.FunctionCall) goja.Value {
 		statusCode = int(call.Argument(0).ToInteger())
 		return res // Chainable
 	})
 
-	// Write body
 	_ = res.Set("write", func(call goja.FunctionCall) goja.Value {
 		if !headersSent {
 			w.WriteHeader(statusCode)
@@ -180,7 +162,6 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 		return res // Chainable
 	})
 
-	// Send response and end
 	_ = res.Set("send", func(call goja.FunctionCall) goja.Value {
 		if !headersSent {
 			w.WriteHeader(statusCode)
@@ -193,7 +174,6 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 		return goja.Undefined()
 	})
 
-	// Send JSON response
 	_ = res.Set("json", func(call goja.FunctionCall) goja.Value {
 		w.Header().Set("Content-Type", "application/json")
 		if !headersSent {
@@ -201,7 +181,6 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 			headersSent = true
 		}
 		if len(call.Arguments) > 0 {
-			// Convert to JSON string
 			val := call.Argument(0).Export()
 			jsonStr, err := toJSON(val)
 			if err != nil {
@@ -212,7 +191,6 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 		return goja.Undefined()
 	})
 
-	// Redirect
 	_ = res.Set("redirect", func(call goja.FunctionCall) goja.Value {
 		url := call.Argument(0).String()
 		code := 302

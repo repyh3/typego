@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ANSI color codes
 const (
 	colorReset  = "\033[0m"
 	colorRed    = "\033[31m"
@@ -50,12 +49,10 @@ restarts. Provides colored output and compilation timing.`,
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 
-		// Initial run
 		runDevProcess(absPath)
 
-		// Polling loop with debounce
 		lastMod := getDevLastMod(absPath)
-		ticker := time.NewTicker(150 * time.Millisecond) // Faster polling
+		ticker := time.NewTicker(150 * time.Millisecond)
 		defer ticker.Stop()
 
 		for {
@@ -127,7 +124,6 @@ func getDevLastMod(file string) time.Time {
 	return info.ModTime()
 }
 
-// Colored output helpers
 func printBanner() {
 	fmt.Printf("%s╔══════════════════════════════════════╗%s\n", colorCyan, colorReset)
 	fmt.Printf("%s║      TypeGo Development Server       ║%s\n", colorCyan, colorReset)

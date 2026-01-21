@@ -29,10 +29,8 @@ var watchCmd = &cobra.Command{
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 
-		// Initial Run
 		runProcess(absPath)
 
-		// Polling Loop (Simple & Robust)
 		lastMod := getLastMod(absPath)
 		ticker := time.NewTicker(200 * time.Millisecond)
 		defer ticker.Stop()
@@ -75,7 +73,6 @@ func runProcess(file string) {
 	// Note: In real dev, we might call internal function, but spawning subprocess ensures clean state
 	// and handles panic/crashes without killing watcher.
 
-	// Assuming 'typego' is in PATH or we use the current executable
 	exe, _ := os.Executable()
 
 	cmd := exec.Command(exe, "run", file)
@@ -89,7 +86,6 @@ func runProcess(file string) {
 
 	currentCmd = cmd
 
-	// Wait in background to clean up zombies
 	go func() {
 		_ = cmd.Wait()
 	}()

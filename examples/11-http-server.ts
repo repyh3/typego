@@ -9,7 +9,6 @@ Println(`Starting server on http://localhost${PORT}`);
 ListenAndServe(PORT, async (req: Request, res: Response) => {
     Println(`[${req.method}] ${req.url}`);
 
-    // CORS headers
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
     res.setHeader("Content-Type", "application/json");
@@ -20,7 +19,6 @@ ListenAndServe(PORT, async (req: Request, res: Response) => {
     }
 
     try {
-        // Simple router based on path
         if (req.path === "/") {
             res.json({
                 message: "Welcome to TypeGo HTTP Server",

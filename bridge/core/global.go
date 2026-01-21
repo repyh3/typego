@@ -20,7 +20,6 @@ func RegisterGlobals(vm *goja.Runtime) {
 			return vm.ToValue(false)
 		}
 
-		// Check for .message property
 		msg := obj.Get("message")
 		if msg != nil && !goja.IsUndefined(msg) {
 			return vm.ToValue(true)

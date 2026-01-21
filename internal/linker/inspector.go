@@ -9,7 +9,6 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// PackageInfo contains metadata about an inspected Go package.
 type PackageInfo struct {
 	Name       string
 	ImportPath string
@@ -17,7 +16,6 @@ type PackageInfo struct {
 	Structs    []ExportedStruct
 }
 
-// ExportedFunc represents a top-level exported function.
 type ExportedFunc struct {
 	Name string
 	Doc  string
@@ -25,7 +23,6 @@ type ExportedFunc struct {
 	Ret  []string
 }
 
-// ExportedStruct represents an exported struct type with its fields and methods.
 type ExportedStruct struct {
 	Name        string
 	PackagePath string // Source package import path
@@ -35,7 +32,6 @@ type ExportedStruct struct {
 	Methods     []MethodInfo
 }
 
-// FieldInfo describes a struct field.
 type FieldInfo struct {
 	Name       string
 	Type       string
@@ -44,7 +40,6 @@ type FieldInfo struct {
 	ImportPath string
 }
 
-// MethodInfo describes a method attached to a struct.
 type MethodInfo struct {
 	Name           string
 	Doc            string
@@ -55,13 +50,11 @@ type MethodInfo struct {
 	HasCallbackArg bool
 }
 
-// ArgInfo describes a function/method argument.
 type ArgInfo struct {
 	Name string
 	Type string
 }
 
-// GoToTSType maps Go types to TypeScript equivalents.
 func GoToTSType(goType string) string {
 	switch goType {
 	case "string":
@@ -89,18 +82,13 @@ func GoToTSType(goType string) string {
 		if strings.HasPrefix(goType, "*") {
 			return GoToTSType(goType[1:])
 		}
-		// Handle variadic types (e.g. "...any" or "...int")
 		if strings.HasPrefix(goType, "...") {
-			// Return the base type array (e.g. "any[]")
-			// The generator will handle the rest parameter syntax
 			baseType := goType[3:]
 			return GoToTSType(baseType) + "[]"
 		}
-		// Handle channels
 		if strings.HasPrefix(goType, "chan ") || strings.HasPrefix(goType, "<-chan ") || strings.HasPrefix(goType, "chan<- ") {
 			return "any"
 		}
-		// Handle anonymous structs
 		if strings.HasPrefix(goType, "struct{") {
 			return "any"
 		}
@@ -108,7 +96,6 @@ func GoToTSType(goType string) string {
 	}
 }
 
-// Inspect loads and analyzes a Go package for functions, structs, and methods.
 func Inspect(importPath string, dir string) (*PackageInfo, error) {
 	cfg := &packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles |
@@ -179,7 +166,6 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct, pkgP
 			Doc:         strings.TrimSpace(decl.Doc.Text()),
 		}
 
-		// Capture Generic Type Parameters
 		if ts.TypeParams != nil {
 			for _, param := range ts.TypeParams.List {
 				for _, name := range param.Names {
@@ -199,7 +185,6 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct, pkgP
 					}
 					goType := types.ExprString(field.Type)
 
-					// Resolve import path
 					var importPath string
 					if info != nil {
 						if t, ok := info.Types[field.Type]; ok {
@@ -305,12 +290,9 @@ func parseMethod(fn *ast.FuncDecl, structMap map[string]*ExportedStruct) {
 		}
 	}
 
-	// Only attach method if the receiver type is already in structMap
-	// (meaning it was identified as a struct type by parseTypeDecl)
 	if existing, ok := structMap[baseName]; ok {
 		existing.Methods = append(existing.Methods, method)
 	}
-	// Non-struct types (like "type Error string") are ignored
 }
 
 func isStructType(typeName string) bool {

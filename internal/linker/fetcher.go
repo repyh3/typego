@@ -6,19 +6,16 @@ import (
 	"os/exec"
 )
 
-// Fetcher handles downloading remote Go modules
 type Fetcher struct {
 	TempDir string
 }
 
-// NewFetcher creates a new Fetcher in a temporary directory
 func NewFetcher() (*Fetcher, error) {
 	tempDir, err := os.MkdirTemp("", "typego-fetcher-*")
 	if err != nil {
 		return nil, err
 	}
 
-	// Initialize a dummy module to hold dependencies
 	cmd := exec.Command("go", "mod", "init", "typego-dummy")
 	cmd.Dir = tempDir
 	if out, err := cmd.CombinedOutput(); err != nil {
@@ -28,7 +25,6 @@ func NewFetcher() (*Fetcher, error) {
 	return &Fetcher{TempDir: tempDir}, nil
 }
 
-// Get downloading a package version using 'go get'
 func (f *Fetcher) Get(pkgPath string) error {
 	cmd := exec.Command("go", "get", pkgPath)
 	cmd.Dir = f.TempDir
@@ -38,7 +34,6 @@ func (f *Fetcher) Get(pkgPath string) error {
 	return nil
 }
 
-// Cleanup removes the temporary directory
 func (f *Fetcher) Cleanup() {
 	os.RemoveAll(f.TempDir)
 }

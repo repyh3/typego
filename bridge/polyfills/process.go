@@ -8,11 +8,9 @@ import (
 	"github.com/dop251/goja"
 )
 
-// EnableProcess injects the Node.js `process` global
 func EnableProcess(vm *goja.Runtime) {
 	proc := vm.NewObject()
 
-	// process.env (Filtered for security)
 	env := vm.NewObject()
 	whitelist := map[string]bool{
 		"PATH":     true,
@@ -37,19 +35,15 @@ func EnableProcess(vm *goja.Runtime) {
 	_ = env.Set("FORCE_COLOR", "1")
 	_ = proc.Set("env", env)
 
-	// process.platform
 	_ = proc.Set("platform", runtime.GOOS)
 
-	// process.cwd()
 	_ = proc.Set("cwd", func(call goja.FunctionCall) goja.Value {
 		wd, _ := os.Getwd()
 		return vm.ToValue(wd)
 	})
 
-	// process.argv
 	_ = proc.Set("argv", os.Args)
 
-	// process.version
 	_ = proc.Set("version", runtime.Version())
 
 	_ = vm.Set("process", proc)

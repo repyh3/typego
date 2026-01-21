@@ -10,26 +10,22 @@ import (
 	"github.com/repyh3/typego/eventloop"
 )
 
-// SharedSegment represents a named block of memory shared between Go and JS.
 type SharedSegment struct {
 	Data []byte
 	Mu   sync.RWMutex
 }
 
-// Factory manages shared memory segments for an engine instance.
 type Factory struct {
 	segments map[string]*SharedSegment
 	mu       sync.Mutex
 }
 
-// NewFactory creates a new memory factory.
 func NewFactory() *Factory {
 	return &Factory{
 		segments: make(map[string]*SharedSegment),
 	}
 }
 
-// MakeShared gets or creates a shared memory segment.
 func (f *Factory) MakeShared(name string, size int) *SharedSegment {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -43,12 +39,10 @@ func (f *Factory) MakeShared(name string, size int) *SharedSegment {
 	return s
 }
 
-// Module implements the typego:memory module.
 type Module struct {
 	Factory *Factory
 }
 
-// GetStats returns memory statistics to JS.
 func (m *Module) GetStats(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
 		var ms runtime.MemStats
@@ -64,7 +58,6 @@ func (m *Module) GetStats(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	}
 }
 
-// Register injects the typego:memory module into the runtime.
 func Register(vm *goja.Runtime, el *eventloop.EventLoop, f *Factory) {
 	if f == nil {
 		f = NewFactory()

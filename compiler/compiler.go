@@ -13,7 +13,6 @@ type Result struct {
 }
 
 func Compile(entryPoint string, virtualModules map[string]string) (*Result, error) {
-	// 1. Try Cache (only if no virtual modules are forced, which implies dynamic requirements)
 	if len(virtualModules) == 0 {
 		if res, err := CheckCache(entryPoint); err == nil && res != nil {
 			return res, nil
@@ -35,10 +34,8 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 				Name: "typego-virtual",
 				Setup: func(build api.PluginBuild) {
 					build.OnResolve(api.OnResolveOptions{Filter: `^go:.*`}, func(args api.OnResolveArgs) (api.OnResolveResult, error) {
-						// Capture the import
 						collectedImports = append(collectedImports, args.Path)
 
-						// Check for core modules and redirect to internal namespace
 						switch args.Path {
 						case "go:fmt", "go:os", "go:sync", "go:net/http", "go:memory":
 							return api.OnResolveResult{Path: args.Path, Namespace: "typego-internal"}, nil
@@ -55,7 +52,6 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 						return api.OnResolveResult{Path: args.Path, Namespace: "typego-internal"}, nil
 					})
 					build.OnLoad(api.OnLoadOptions{Filter: `.*`, Namespace: "typego-hyperlink"}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
-						// Check if we have dynamic content for this module
 						if content, ok := virtualModules[args.Path]; ok {
 							return api.OnLoadResult{Contents: &content, Loader: api.LoaderTS}, nil
 						}
@@ -78,7 +74,6 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 							content = "const h = (globalThis as any).__go_http__; export const Get = h.Get; export const Fetch = h.Fetch; export const Post = h.Post; export const ListenAndServe = h.ListenAndServe;"
 						case "go/sync", "go:sync":
 							content = "const s = (globalThis as any).__go_sync__; export const Spawn = s.Spawn; export const Sleep = s.Sleep; export const Chan = (globalThis as any).Chan;"
-						// New TypeGo Stdlib
 						case "typego:memory":
 							content = "const m = (globalThis as any).__typego_memory__; export const makeShared = m.makeShared; export const stats = m.stats; export const ptr = m.ptr;"
 						case "typego:worker":
@@ -113,7 +108,6 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 		res.JS = string(result.OutputFiles[0].Contents)
 	}
 
-	// Save to cache
 	if len(virtualModules) == 0 {
 		_ = SaveCache(entryPoint, res)
 	}

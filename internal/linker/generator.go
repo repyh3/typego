@@ -5,22 +5,17 @@ import (
 	"strings"
 )
 
-// GenerateShim creates the Go code to bind the package to the VM.
-// Binds both top-level functions and exported structs.
 func GenerateShim(info *PackageInfo, variableName string) string {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("\n\t// Bind %s\n", info.ImportPath))
 	sb.WriteString(fmt.Sprintf("\t%s := eng.VM.NewObject()\n", variableName))
 
-	// Bind top-level functions
 	for _, fn := range info.Exports {
 		sb.WriteString(fmt.Sprintf("\t%s.Set(%q, %s.%s)\n", variableName, fn.Name, info.Name, fn.Name))
 	}
 
-	// Bind struct constructors (factory functions)
 	for _, st := range info.Structs {
-		// Skip unexported structs (defensive check)
 		if len(st.Name) == 0 || st.Name[0] < 'A' || st.Name[0] > 'Z' {
 			continue
 		}
@@ -33,28 +28,24 @@ func GenerateShim(info *PackageInfo, variableName string) string {
 	return sb.String()
 }
 
-// GenerateTypes creates the TypeScript definition with JSDoc.
 func GenerateTypes(info *PackageInfo) string {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("// MODULE: go:%s\n", info.ImportPath))
 	sb.WriteString(fmt.Sprintf("declare module \"go:%s\" {\n", info.ImportPath))
 
-	// Collect imports
-	imports := make(map[string]map[string]bool) // pkgPath -> typeName -> bool
+	imports := make(map[string]map[string]bool)
 	for _, st := range info.Structs {
 		for _, field := range st.Fields {
 			if field.ImportPath != "" && field.ImportPath != info.ImportPath {
 				if imports[field.ImportPath] == nil {
 					imports[field.ImportPath] = make(map[string]bool)
 				}
-				// Extract type name from Go type (e.g. "*http.Client" -> "Client")
 				typeName := field.Type
 				if idx := strings.LastIndex(typeName, "."); idx != -1 {
 					typeName = typeName[idx+1:]
 				}
 				typeName = strings.TrimPrefix(typeName, "*")
-				// Remove array brackets if present
 				typeName = strings.ReplaceAll(typeName, "[]", "")
 
 				imports[field.ImportPath][typeName] = true
@@ -62,7 +53,6 @@ func GenerateTypes(info *PackageInfo) string {
 		}
 	}
 
-	// Generate import statements
 	for pkgPath, types := range imports {
 		var typeList []string
 		for t := range types {
@@ -107,7 +97,6 @@ func generateStructInterface(st ExportedStruct) string {
 
 	for _, field := range st.Fields {
 		tsType := field.TSType
-		// If imported, strip the package prefix
 		if field.ImportPath != "" {
 			if idx := strings.LastIndex(tsType, "."); idx != -1 {
 				tsType = tsType[idx+1:]

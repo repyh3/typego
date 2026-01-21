@@ -37,7 +37,6 @@ var typesCmd = &cobra.Command{
 			currentContent = core.GlobalTypes
 		}
 
-		// Initialize Fetcher
 		fetcher, err := linker.NewFetcher()
 		if err != nil {
 			fmt.Printf("Failed to init fetcher: %v\n", err)
@@ -45,20 +44,17 @@ var typesCmd = &cobra.Command{
 		}
 		defer fetcher.Cleanup()
 
-		// Collect all TypeScript files to scan (deduplicated)
 		fileSet := make(map[string]bool)
 		if len(args) > 0 {
 			// Explicit file provided
 			absPath, _ := filepath.Abs(args[0])
 			fileSet[absPath] = true
 		} else {
-			// Recursively find all .ts files in the current project
 			err := filepath.WalkDir(".", func(path string, d os.DirEntry, err error) error {
 				if err != nil {
 					return err
 				}
 
-				// Skip common non-source and system directories
 				if d.IsDir() {
 					name := d.Name()
 					if name == "node_modules" || name == ".typego" || name == ".git" || name == ".gemini" {
@@ -67,7 +63,6 @@ var typesCmd = &cobra.Command{
 					return nil
 				}
 
-				// Only collect .ts files
 				if filepath.Ext(path) == ".ts" {
 					absPath, _ := filepath.Abs(path)
 					fileSet[absPath] = true
@@ -79,10 +74,8 @@ var typesCmd = &cobra.Command{
 			}
 		}
 
-		// Collect unique Go imports from all files
 		goImports := make(map[string]bool)
 
-		// FORCE: Always include core modules that need inspection
 		coreModules := []string{
 			"go:fmt", "go:os", "go:net/url",
 		}
@@ -102,7 +95,6 @@ var typesCmd = &cobra.Command{
 			}
 		}
 
-		// Generate types for each unique import
 		for imp := range goImports {
 			// Skip modules that are already fully defined in std.d.ts
 			if imp == "go:net/http" || imp == "go:sync" || imp == "typego:memory" || imp == "typego:worker" || imp == "go:memory" {

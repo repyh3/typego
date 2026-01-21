@@ -14,7 +14,6 @@ import (
 	"github.com/repyh3/typego/bridge/stdlib/worker"
 	"github.com/repyh3/typego/eventloop"
 
-	// Import modules to trigger their init() registration
 	_ "github.com/repyh3/typego/bridge/modules/crypto"
 	_ "github.com/repyh3/typego/bridge/modules/fmt"
 	_ "github.com/repyh3/typego/bridge/modules/json"
@@ -65,13 +64,10 @@ func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
 		mf = memory.NewFactory()
 	}
 
-	// Core modules (special dependencies)
 	core.RegisterConsole(vm)
 	core.RegisterGlobals(vm)
-	// Register new stdlib modules
 	memory.Register(vm, el, mf)
 
-	// Auto-registered modules (fmt, os, http, sync)
 	core.InitAll(vm, el)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -151,8 +147,6 @@ func (e *Engine) StartMemoryMonitor(interval time.Duration) {
 				var m runtime.MemStats
 				runtime.ReadMemStats(&m)
 
-				// m.Sys is the total memory obtained from the OS.
-				// This catches both JS heap and Go internal growth.
 				if m.Sys > e.MemoryLimit {
 					e.VM.Interrupt(ErrMemoryLimitExceeded)
 					fmt.Fprintf(os.Stderr, "\n [TypeGo] CRITICAL: Memory limit reached (%d MB > %d MB). Interrupting VM...\n", m.Sys/1024/1024, e.MemoryLimit/1024/1024)
