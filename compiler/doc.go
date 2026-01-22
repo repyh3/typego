@@ -1,5 +1,3 @@
-// Package compiler provides TypeScript-to-JavaScript transpilation for TypeGo.
-//
 // The compiler uses esbuild to bundle TypeScript code, resolve imports, and produce
 // a single JavaScript output suitable for execution in the Goja runtime. It handles
 // both standard NPM imports and TypeGo's special go: import syntax.

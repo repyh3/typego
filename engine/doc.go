@@ -1,5 +1,3 @@
-// Package engine provides the core JavaScript execution environment for TypeGo.
-//
 // Engine wraps the Goja JavaScript runtime with an event loop, memory management,
 // and bridge bindings to Go packages. It serves as the main entry point for
 // running TypeScript/JavaScript code in the TypeGo runtime.

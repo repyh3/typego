@@ -60,7 +60,6 @@ Use --compile to generate a standalone Go binary (slower, but more portable).`,
 }
 
 func init() {
-	// Registered in root.go
 	RunCmd.Flags().BoolVarP(&compileMode, "compile", "c", false, "Compile to standalone binary (slower)")
 }
 

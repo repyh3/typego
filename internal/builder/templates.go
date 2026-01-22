@@ -34,14 +34,11 @@ func main() {
 	// Use the unified engine which handles ALL module registration
 	eng := engine.NewEngine(%[4]d, nil)
 
-	// Initialize Native Tools
 	tools := &NativeTools{StartTime: "2026-01-20"}
 	_ = eng.BindStruct("native", tools)
 
-	// Hyper-Linker Bindings (Generated)
 	%[3]s
 
-	// Run on EventLoop
 	eng.EventLoop.RunOnLoop(func() {
 		val, err := eng.Run(jsBundle)
 		if err != nil {

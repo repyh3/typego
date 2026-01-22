@@ -29,10 +29,8 @@ var WatchCmd = &cobra.Command{
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 
-		// Initial Run
 		runProcess(absPath)
 
-		// Polling Loop (Simple & Robust)
 		lastMod := getLastMod(absPath)
 		ticker := time.NewTicker(200 * time.Millisecond)
 		defer ticker.Stop()
@@ -104,5 +102,4 @@ func getLastMod(file string) time.Time {
 }
 
 func init() {
-	// Registered in root.go
 }

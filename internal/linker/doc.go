@@ -1,5 +1,3 @@
-// Package linker provides dynamic Go package binding for TypeGo.
-//
 // When TypeScript code imports a Go package using the go: prefix (e.g., go:fmt),
 // the linker is responsible for fetching, inspecting, and generating bindings
 // for that package at compile time.

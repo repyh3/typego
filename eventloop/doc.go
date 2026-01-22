@@ -1,5 +1,3 @@
-// Package eventloop provides a thread-safe event loop for JavaScript execution.
-//
 // The event loop ensures that all Goja runtime operations occur on a single
 // goroutine, preventing race conditions. It also manages async operations
 // through a wait group mechanism.

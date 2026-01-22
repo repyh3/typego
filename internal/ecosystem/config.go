@@ -19,7 +19,6 @@ type ResolvedPackage struct {
 	Version string `json:"version"`
 }
 
-// DefaultLockfile creates an empty lockfile
 func DefaultLockfile() Lockfile {
 	return Lockfile{
 		LockfileVersion: 1,
@@ -35,13 +34,11 @@ type ModuleConfig struct {
 	Compiler     CompilerConfig    `json:"compiler,omitempty"`
 }
 
-// CompilerConfig holds settings for the Go toolchain
 type CompilerConfig struct {
 	GoVersion string   `json:"goVersion,omitempty"`
 	Tags      []string `json:"tags,omitempty"`
 }
 
-// DefaultConfig returns a standard configuration template
 func DefaultConfig() ModuleConfig {
 	return ModuleConfig{
 		// placeholder for now
@@ -56,7 +53,6 @@ func DefaultConfig() ModuleConfig {
 	}
 }
 
-// Validate checks the configuration for common errors
 func (c *ModuleConfig) Validate() error {
 	for dep := range c.Dependencies {
 		if dep == "" {
