@@ -20,8 +20,18 @@ type methodInfo struct {
 	Index int
 }
 
+// fieldInfo holds metadata about an exported field to avoid repeated reflection lookups.
+type fieldInfo struct {
+	Index     int
+	Name      string
+	Anonymous bool
+}
+
 // cache for struct method metadata: reflect.Type -> []methodInfo
 var typeMethodCache sync.Map
+
+// cache for struct field metadata: reflect.Type -> []fieldInfo
+var typeFieldCache sync.Map
 
 // BindStruct exposes a Go struct to JavaScript with full field and method access.
 // Supports nested structs (converted recursively) and callback arguments.
@@ -83,13 +93,35 @@ func bindStruct(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Va
 
 func bindStructFields(vm *sobek.Runtime, obj *sobek.Object, v reflect.Value, visited map[uintptr]sobek.Value) error {
 	t := v.Type()
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		if !field.IsExported() {
-			continue
-		}
 
-		fieldVal := v.Field(i)
+	// @optimized: Use cached field metadata to avoid repeated reflection overhead (NumField, IsExported).
+	var fields []fieldInfo
+	cached, loaded := typeFieldCache.Load(t)
+	if loaded {
+		if cachedFields, ok := cached.([]fieldInfo); ok {
+			fields = cachedFields
+		}
+	}
+
+	if fields == nil {
+		numFields := t.NumField()
+		fields = make([]fieldInfo, 0, numFields)
+		for i := 0; i < numFields; i++ {
+			field := t.Field(i)
+			if !field.IsExported() {
+				continue
+			}
+			fields = append(fields, fieldInfo{
+				Index:     i,
+				Name:      field.Name,
+				Anonymous: field.Anonymous,
+			})
+		}
+		typeFieldCache.Store(t, fields)
+	}
+
+	for _, field := range fields {
+		fieldVal := v.Field(field.Index)
 
 		// Support for Flattened Embedding (Anonymous Fields)
 		if field.Anonymous {

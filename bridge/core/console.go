@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/grafana/sobek"
 )
@@ -10,21 +9,23 @@ import (
 type Console struct{}
 
 func (c *Console) Log(call sobek.FunctionCall) sobek.Value {
-	args := make([]string, len(call.Arguments))
+	// @optimized: Use []interface{} and fmt.Println to avoid string conversion overhead and allocation.
+	args := make([]interface{}, len(call.Arguments))
 	for i, arg := range call.Arguments {
-		args[i] = fmt.Sprint(arg.Export())
+		args[i] = arg.Export()
 	}
-	fmt.Println(strings.Join(args, " "))
+	fmt.Println(args...)
 	return sobek.Undefined()
 }
 
 func (c *Console) Error(call sobek.FunctionCall) sobek.Value {
-	args := make([]string, len(call.Arguments))
+	// @optimized: Use []interface{} and fmt.Println to avoid string conversion overhead and allocation.
+	args := make([]interface{}, len(call.Arguments))
 	for i, arg := range call.Arguments {
-		args[i] = fmt.Sprint(arg.Export())
+		args[i] = arg.Export()
 	}
 	fmt.Print("Error: ")
-	fmt.Println(strings.Join(args, " "))
+	fmt.Println(args...)
 	return sobek.Undefined()
 }
 

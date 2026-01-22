@@ -1,8 +1,3 @@
-// Package core provides internal utilities for the TypeGo bridge layer.
-//
-// This package contains low-level primitives used by the bridge to convert
-// data between Go and JavaScript. It is not intended for direct use by
-// TypeGo applications.
 package core
 
 import (
