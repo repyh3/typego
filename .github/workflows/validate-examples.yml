@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ fromJson(needs: list-projects.outputs.projects) }}
+        project: ${{ fromJson(needs.list-projects.outputs.projects) }}
     steps:
       - uses: actions/checkout@v4
       
