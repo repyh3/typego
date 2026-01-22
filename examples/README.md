@@ -1,38 +1,39 @@
 # TypeGo Examples
 
-Demonstration scripts showcasing TypeGo's core features.
+A collection of examples showcasing TypeGo's unique capabilities, from Go-style concurrency to low-level memory management.
 
-## Usage
+## Getting Started
 
+To run any example:
 ```bash
 typego run examples/<filename>.ts
 ```
 
-With memory limit:
-```bash
-typego run examples/04-secure-network.ts -M 256
-```
+## Available Examples
 
-## Examples
+### Basics
+- `01-hello-world.ts`: The classic entry point.
+- `02-concurrency-basics.ts`: Simple background tasks using `go` and `Sleep`.
+- `06-process-env.ts`: Accessing environment variables.
+- `09-typego-stdlib.ts`: Overview of built-in modules.
 
-| File | Description |
-|------|-------------|
-| `01-hello-world.ts` | Basic TypeScript execution and output |
-| `02-go-concurrency.ts` | `Spawn` and async `Sleep` for parallelism |
-| `03-multithreading-workers.ts` | Worker API with shared memory |
-| `04-secure-network.ts` | HTTP fetch with timeouts and size limits |
-| `05-secure-fs.ts` | Sandboxed file system access |
-| `06-process-env.ts` | Filtered environment variables |
-| `07-external-module.ts` | Third-party Go package imports |
-| `08-nested-structs.ts` | Complex nested struct handling |
-| `09-typego-stdlib.ts` | Native `typego:memory` and `typego:worker` |
-| `10-http-server.ts` | HTTP server with CORS and routing |
+### Concurrency & Parallelism
+- `11-concurrency-advanced.ts`: Channels (`makeChan`) and multiplexing (`select`).
+- `03-multithreading-workers.ts`: High-performance background workers.
 
-## NPM Dependencies
+### Security & Sandbox
+- `04-secure-network.ts`: Granular network permissions.
+- `05-secure-fs.ts`: Strict file system access control.
 
-Some examples use NPM packages. Install with:
+### Low-Level & Memory
+- `12-memory-management.ts`: Detailed inspection with `sizeof` and allocation with `make`/`cap`.
+- `15-pointers.ts`: Variable references and tracking using `ref` and `deref`.
+- `08-nested-structs.ts`: Complex data structure bridging.
 
-```bash
-cd examples
-npm install
-```
+### Advanced Control & Meta
+- `13-error-handling.ts`: Robust cleanup with `defer` and panic recovery.
+- `14-metaprogramming.ts`: Auto-incrementing constants with `iota`.
+- `07-external-module.ts`: Importing and using external TypeScript modules.
+
+### Networking
+- `10-http-server.ts`: Building a type-safe web server with the `net/http` module.

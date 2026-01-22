@@ -1,29 +1,28 @@
-package polyfills
+package intrinsics
 
 import (
 	"time"
 
 	"github.com/grafana/sobek"
-	"github.com/repyh/typego/eventloop"
 )
 
 // EnableTimers injects setTimeout and setInterval globals
-func EnableTimers(vm *sobek.Runtime, el *eventloop.EventLoop) {
-	_ = vm.Set("setTimeout", func(call sobek.FunctionCall) sobek.Value {
+func (r *Registry) EnableTimers() {
+	_ = r.vm.Set("setTimeout", func(call sobek.FunctionCall) sobek.Value {
 		fn, _ := sobek.AssertFunction(call.Argument(0))
 		ms := call.Argument(1).ToInteger()
-		el.WGAdd(1)
+		r.el.WGAdd(1)
 		go func() {
 			time.Sleep(time.Duration(ms) * time.Millisecond)
-			el.RunOnLoop(func() {
+			r.el.RunOnLoop(func() {
 				_, _ = fn(sobek.Undefined())
-				el.WGDone()
+				r.el.WGDone()
 			})
 		}()
 		return sobek.Undefined()
 	})
 
-	_ = vm.Set("setInterval", func(call sobek.FunctionCall) sobek.Value {
+	_ = r.vm.Set("setInterval", func(call sobek.FunctionCall) sobek.Value {
 		fn, _ := sobek.AssertFunction(call.Argument(0))
 		ms := call.Argument(1).ToInteger()
 
@@ -35,7 +34,7 @@ func EnableTimers(vm *sobek.Runtime, el *eventloop.EventLoop) {
 			for {
 				select {
 				case <-ticker.C:
-					el.RunOnLoop(func() {
+					r.el.RunOnLoop(func() {
 						_, _ = fn(sobek.Undefined())
 					})
 				case <-stop:
@@ -45,13 +44,13 @@ func EnableTimers(vm *sobek.Runtime, el *eventloop.EventLoop) {
 		}()
 
 		// Return a simple ID object for clearInterval
-		id := vm.NewObject()
+		id := r.vm.NewObject()
 		_ = id.Set("__stop__", stop)
 		return id
 	})
 
-	_ = vm.Set("clearInterval", func(call sobek.FunctionCall) sobek.Value {
-		obj := call.Argument(0).ToObject(vm)
+	_ = r.vm.Set("clearInterval", func(call sobek.FunctionCall) sobek.Value {
+		obj := call.Argument(0).ToObject(r.vm)
 		if obj != nil {
 			if ch := obj.Get("__stop__"); ch != nil {
 				if stop, ok := ch.Export().(chan struct{}); ok {

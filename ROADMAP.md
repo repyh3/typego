@@ -8,12 +8,18 @@ This document outlines the planned technical direction for **TypeGo**. Please no
 ### Core Engine & Linking
 - [x] **Sobek Engine Migration**: Move from Goja to Sobek to support ES2017+ features (async/await, promises) and improve memory efficiency without using CGO.
 - [ ] **Recursive Linker Upgrade**: Support for recursive type resolution, Go struct embedding, and JIT interface inspection for transparent bridging.
-- [ ] **Global Intrinsics**: Support for Go-native keywords as top-level functions: `defer()`, `panic()`, and `sizeof()`.
+- [x] **Global Intrinsics**: Support for Go-native keywords as top-level functions: `defer()`, `panic()`, `recover()`, `sizeof()`, and `iota`.
 
 ### Low-Level Memory
-- [ ] **Ref<T> API**: Implement explicit pointer management for primitives and Go structs with `.value` and `.ptr` access.
+- [x] **Ref<T> API**: Implement explicit pointer management for primitives and Go structs with `ref()` and `deref()` access.
 - [ ] **Pointer Handles**: Allow direct memory mutation across the bridge with safety checks and automatic finalization.
+- [x] **Slice Primitives**: Implement `make()`, `cap()`, and `copy()` for high-performance TypedArray management.
 - [ ] **Alloc-Less Reflection**: Optimize `bridge/core/reflection.go` to minimize allocations during hot path execution.
+
+### Concurrency & I/O
+- [x] **Sync Primitives**: Mapping of Go’s `sync` package logic to TypeScript: `go` routines, `makeChan`, and native `select`.
+- [ ] **Streaming I/O**: TypeScript interfaces for Go’s `io.Reader` and `io.Writer` for memory-efficient processing.
+- [ ] **Worker Scaling**: Improve the `typego:worker` module with auto-respawn and load balancing logic.
 
 ### Maintenance
 - [ ] **AI-Assisted Optimization**: Integration of Google Jules for daily performance audits.
@@ -25,11 +31,6 @@ This document outlines the planned technical direction for **TypeGo**. Please no
 ### Advanced Interop
 - [ ] **TypeScript Decorators**: Initial support for `@GoType`, `@Pointer`, and lifecycle decorators for bridge configuration.
 - [ ] **Shared Buffer API**: Direct memory sharing between TypeScript workers and Go for zero-copy data processing.
-
-### Concurrency & I/O
-- [ ] **Sync Primitives**: Mapping of Go’s `sync` package logic to TypeScript: `Mutex`, `WaitGroup`, and native `Channels`.
-- [ ] **Streaming I/O**: TypeScript interfaces for Go’s `io.Reader` and `io.Writer` for memory-efficient processing.
-- [ ] **Worker Scaling**: Improve the `typego:worker` module with auto-respawn and load balancing logic.
 
 ## [v1.7.0] - Desktop & Resource Management
 **Target**: Provide tools for building lightweight desktop applications and monitoring system impact.

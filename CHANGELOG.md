@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.5.0] - 2026-01-22
+
+### Core Engine Upgrade
+- **Sobek Migration**: Successfully migrated from Goja to Sobek. This enables modern ES2017+ features (async/await, promises) and improves performance for complex TypeScript workloads without CGO dependencies.
+- **Thread-Safe Runtime**: Introduced a global `VMLock` and a non-blocking `select` loop that yields this lock, allowing Go goroutines to safely interact with the single-threaded JavaScript environment.
+
+### Global Intrinsics (The "Low-Level" Milestone)
+- **`panic()` & `recover()`**: Implemented Go-native error handling. `panic()` stops execution with a Go-formatted error, and `recover()` allows safe capture within deferred functions.
+- **`defer()`**: Added a compile-time transformation that schedules cleanup tasks to run at the end of a function, even if a panic occurs.
+- **`sizeof()`**: Implemented a deep memory inspection intrinsic with circular reference detection and meta-caching for high-performance sizing.
+- **`go()`**: Direct bridging to Go goroutines. Launch any JS function effectively in the background.
+- **`makeChan()` & `select()`**: Native Go channels and multiplexing for robust concurrent communication between JS tasks.
+- **`iota`**: Support for auto-incrementing compile-time constants.
+
+### Memory & Pointers
+- **Pointer Intrinsics**: Introduced `ref()` and `deref()` for explicit variable tracking and reference management.
+- **Slice Primitives**: Added `make()`, `cap()`, and `copy()` to provide Go-like performance for TypedArray manipulation.
+
+### DX & CLI
+- **New Examples**: Revamped the `examples/` directory with detailed showcases for concurrency, memory management, and advanced control flow.
+- **IntelliSense Expansion**: Full TypeScript definitions for all new intrinsics integrated into the automatic type generation pipeline.
+
 ## [v1.4.0] - 2026-01-21
 
 ### TypeGo Package Ecosystem

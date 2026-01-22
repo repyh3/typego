@@ -8,7 +8,9 @@ import (
 	"strings"
 
 	"github.com/repyh/typego/bridge/core"
+	"github.com/repyh/typego/bridge/intrinsics"
 	bridge_crypto "github.com/repyh/typego/bridge/modules/crypto"
+
 	bridge_net "github.com/repyh/typego/bridge/modules/net"
 	bridge_sync "github.com/repyh/typego/bridge/modules/sync"
 	bridge_memory "github.com/repyh/typego/bridge/stdlib/memory"
@@ -30,12 +32,23 @@ var TypesCmd = &cobra.Command{
 			return
 		}
 
-		// Read existing (target) file first, or use embedded default
+		// Read existing (target) file first
 		var currentContent []byte
 		if existing, err := os.ReadFile(dtsPath); err == nil && len(existing) > 0 {
 			currentContent = existing
+		}
+
+		// Always ensure global types are up to date at the start
+		newGlobal := string(core.GlobalTypes) + "\n" + intrinsics.IntrinsicTypes
+
+		reGlobal := regexp.MustCompile(`(?s)^// TypeGo Type Definitions.*?// TypeGo Namespaces`)
+		if reGlobal.Match(currentContent) {
+			currentContent = reGlobal.ReplaceAll(currentContent, []byte(newGlobal))
+		} else if len(currentContent) == 0 {
+			currentContent = []byte(newGlobal)
 		} else {
-			currentContent = core.GlobalTypes
+			// Prepend if not found
+			currentContent = append([]byte(newGlobal+"\n"), currentContent...)
 		}
 
 		fetcher, err := linker.NewFetcher()

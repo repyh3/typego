@@ -4,41 +4,7 @@
 // Helper for handling Go errors in catch blocks
 declare function isGoError(e: unknown): e is Error;
 
-/**
- * Estimates the memory size of an object in bytes.
- * This is a TypeGo intrinsic that performs shallow or deep inspection 
- * based on the underlying Go representation.
- * 
- * @param obj The object to measure.
- * @returns Estimated size in bytes.
- */
-declare function sizeof(obj: any): number;
-
-/**
- * Panics the runtime with a message, mimicking Go's panic.
- * It stops the ordinary flow of control and begins panicking.
- * 
- * @param message The panic message.
- */
-declare function panic(message: string): never;
-
-/**
- * Schedules a function call to be run immediately before the function returns.
- * The deferred call's arguments are evaluated immediately, but the function call 
- * is not executed until the surrounding function returns.
- * 
- * Note: This is a TypeGo intrinsic handled by the AST transformer.
- * 
- * @param fn The function to execute when the surrounding function exits.
- */
-declare function defer(fn: () => void): void;
-
 // TypeGo Namespaces
 declare namespace typego {
-    /**
-     * Defines a scope where deferred functions are executed LIFO upon exit.
-     * Functions called with 'defer' inside this scope will be executed 
-     * when the scope's callback returns or throws.
-     */
-    function scope<T>(fn: (defer: (cleanup: () => void) => void) => T): T;
+    // Other typego namespaces can be added here
 }

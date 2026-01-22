@@ -17,7 +17,6 @@ import (
 	%[1]s
 
 	"github.com/grafana/sobek"
-	"github.com/repyh/typego/bridge/polyfills"
 	"github.com/repyh/typego/engine"
 )
 
@@ -38,9 +37,6 @@ func main() {
 	// Initialize Native Tools
 	tools := &NativeTools{StartTime: "2026-01-20"}
 	_ = eng.BindStruct("native", tools)
-
-	// Node.js Polyfills (Process, Buffer, Timers)
-	polyfills.EnableAll(eng.VM, eng.EventLoop)
 
 	// Hyper-Linker Bindings (Generated)
 	%[3]s

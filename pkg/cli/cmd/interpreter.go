@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/repyh/typego/bridge/polyfills"
 	"github.com/repyh/typego/compiler"
 	"github.com/repyh/typego/engine"
 )
@@ -26,8 +25,6 @@ func runInterpreter(filename string) error {
 
 	eng := engine.NewEngine(MemoryLimit*1024*1024, nil)
 	defer eng.Close()
-
-	polyfills.EnableAll(eng.VM, eng.EventLoop)
 
 	var runErr error
 

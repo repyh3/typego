@@ -31,9 +31,6 @@ func TestShimTemplate_Validity(t *testing.T) {
 	if !strings.Contains(code, "engine.NewEngine") {
 		t.Error("Generated code missing engine initialization")
 	}
-	if !strings.Contains(code, "polyfills.EnableAll") {
-		t.Error("Generated code missing polyfills")
-	}
 }
 
 func truncate(s string, n int) string {

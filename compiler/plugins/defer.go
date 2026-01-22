@@ -19,6 +19,7 @@ func DeferPlugin() api.Plugin {
 			// Initialize Visitors
 			core.Visitors = nil
 			core.RegisterVisitor(&visitors.DeferVisitor{})
+			core.RegisterVisitor(&visitors.IotaVisitor{})
 
 			// Broad filter to capture everything for debugging, then check extension manually
 			build.OnLoad(api.OnLoadOptions{Filter: `.*`}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {

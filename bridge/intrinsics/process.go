@@ -1,4 +1,4 @@
-package polyfills
+package intrinsics
 
 import (
 	"os"
@@ -9,10 +9,10 @@ import (
 )
 
 // EnableProcess injects the Node.js `process` global
-func EnableProcess(vm *sobek.Runtime) {
-	proc := vm.NewObject()
+func (r *Registry) EnableProcess() {
+	proc := r.vm.NewObject()
 
-	env := vm.NewObject()
+	env := r.vm.NewObject()
 	whitelist := map[string]bool{
 		"PATH":     true,
 		"LANG":     true,
@@ -43,7 +43,7 @@ func EnableProcess(vm *sobek.Runtime) {
 	// process.cwd()
 	_ = proc.Set("cwd", func(call sobek.FunctionCall) sobek.Value {
 		wd, _ := os.Getwd()
-		return vm.ToValue(wd)
+		return r.vm.ToValue(wd)
 	})
 
 	// process.argv
@@ -52,5 +52,5 @@ func EnableProcess(vm *sobek.Runtime) {
 	// process.version
 	_ = proc.Set("version", runtime.Version())
 
-	_ = vm.Set("process", proc)
+	_ = r.vm.Set("process", proc)
 }
