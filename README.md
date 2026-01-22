@@ -43,7 +43,6 @@ Unlike typical runtimes that communicate over IPC or JSON-RPC, typego runs a JS 
 - [Tooling](#tooling)
   - [CLI Reference](#cli-reference)
   - [Package Management](#package-management)
-  - [Configuration](#configuration)
 - [Ecosystem](#ecosystem)
   - [Performance](#performance)
   - [Runtime Comparison](#runtime-comparison)
@@ -469,7 +468,7 @@ TypeGo manages memory automatically but provides tools for manual control when p
 When passing large Go structs to JavaScript, TypeGo typically copies the value. To avoid this overhead, use `ref`.
 
 ```typescript
-import { ref, deref } from "typego:intrinsics"; // or global
+// 'ref' and 'deref' are global intrinsics
 
 const largeObj = { id: 1, payload: "huge..." };
 const ptr = ref(largeObj); // ptr is a light handle (Ref<T>)
@@ -560,22 +559,6 @@ This command:
 3. Rebuilds the internal bridge.
 4. Generates TypeScript definitions (`go.d.ts`).
 
-### Configuration
-
-`typego.config.json` (optional) allows customizing compiler behavior.
-
-```json
-{
-  "compilerOptions": {
-    "target": "es2020",
-    "minify": true
-  },
-  "build": {
-    "output": "dist/app"
-  }
-}
-```
-
 ---
 
 ## Ecosystem
@@ -638,9 +621,10 @@ const srv = ListenAndServe(":3000", loggingMiddleware(handler));
 Implement a pool of workers processing tasks from a shared channel.
 
 ```typescript
-import { makeChan, go, select } from "typego:intrinsics";
 import { Worker } from "typego:worker";
 import { Println } from "go:fmt";
+
+// 'makeChan' and 'go' are global intrinsics
 
 const jobs = makeChan<number>(100);
 const results = makeChan<number>(100);
