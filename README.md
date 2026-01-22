@@ -489,19 +489,16 @@ const pixels = new Uint8ClampedArray(shared.buffer);
 Ensure resources are cleaned up when a scope exits.
 
 ```typescript
-import { WriteFile, Remove } from "go:os";
-
-function processFile() {
-    const path = "data.tmp";
-    WriteFile(path, "temporary data");
-
+function processData() {
+    const resources = [];
+    
     defer(() => {
-        Remove(path);
-        console.log("Temp file removed");
+        console.log("Cleaning up resources...");
+        resources.forEach(r => r.close());
     });
 
-    // Process file...
-    // If a panic occurs here, Remove() is still called
+    // Acquire resources...
+    // If a panic occurs here, cleanup is still called
 }
 ```
 
