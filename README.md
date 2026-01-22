@@ -116,7 +116,7 @@ TypeGo uses a unique import scheme to distinguish between TypeScript/JS modules 
 // Import standard Go packages
 // Access any package from the Go standard library by prefixing with 'go:'
 import { Println, Sprintf, Errorf } from "go:fmt";
-import { Sleep, Mutex } from "go:sync";
+import { Sleep } from "go:sync";
 
 // Import external Go modules (must be added via CLI first)
 // Use the full module path prefixed with 'go:'
@@ -174,7 +174,6 @@ console.log(process.cwd());
 
 // Platform Information
 console.log(process.platform); // e.g., 'linux', 'darwin', 'windows'
-console.log(process.arch);     // e.g., 'amd64', 'arm64'
 console.log(process.version);  // Go runtime version (e.g., 'go1.21.0')
 
 // Arguments
@@ -322,7 +321,7 @@ if (Args.length > 1) {
 Concurrency primitives.
 
 ```typescript
-import { Spawn, Sleep, Mutex, RWMutex, WaitGroup } from "go:sync";
+import { Spawn, Sleep } from "go:sync";
 
 // --- Spawning Async Tasks ---
 Spawn(async () => {
@@ -330,25 +329,6 @@ Spawn(async () => {
     await Sleep(1000); // Sleep for 1000ms
     console.log("Task complete");
 });
-
-// --- Mutexes ---
-// Note: Mutexes in TypeGo are async-aware to prevent blocking the event loop
-const mu = new Mutex();
-
-async function safeIncrement() {
-    await mu.Lock();
-    try {
-        // Critical section
-        console.log("Locked");
-    } finally {
-        mu.Unlock();
-    }
-}
-
-// --- RWMutex ---
-const rw = new RWMutex();
-await rw.RLock(); // Read lock
-rw.RUnlock();
 ```
 
 #### typego:memory
@@ -503,17 +483,19 @@ const pixels = new Uint8ClampedArray(shared.buffer);
 Ensure resources are cleaned up when a scope exits.
 
 ```typescript
-import { Open } from "go:os";
+import { WriteFile, Remove } from "go:os";
 
 function processFile() {
-    const file = Open("data.csv");
+    const path = "temp.txt";
+    WriteFile(path, "data");
+
     defer(() => {
-        file.Close();
-        console.log("File closed");
+        Remove(path);
+        console.log("Temp file cleaned up");
     });
 
-    // Read file...
-    // If panic occurs here, Close() is still called
+    // Process file...
+    // If panic occurs here, Remove() is still called
 }
 ```
 
@@ -663,21 +645,16 @@ for (let a = 1; a <= 5; a++) {
 
 ### File Processing Pipeline
 
-Read a file, transform it, and write it back using streams and buffers.
+Read a file, transform it, and write it back.
 
 ```typescript
-import { Open, Create } from "go:os";
-import { Copy } from "go:io";
+import { ReadFile, WriteFile } from "go:os";
 
-const src = Open("input.dat");
-defer(() => src.Close());
-
-const dst = Create("output.dat");
-defer(() => dst.Close());
-
-// Efficient kernel-level copy
-const bytes = Copy(dst, src);
-console.log(`Copied ${bytes} bytes`);
+// Simple read-modify-write
+const data = ReadFile("input.dat");
+const transformed = data + "\nUpdated";
+WriteFile("output.dat", transformed);
+console.log("Done");
 ```
 
 ### External Go Modules
