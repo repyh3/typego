@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/engine"
 )
 
@@ -51,28 +51,28 @@ func (h *TestHarness) Run(t *testing.T, code string) {
 		}
 
 		// Handle Promise
-		if val != nil && !goja.IsUndefined(val) && !goja.IsNull(val) {
+		if val != nil && !sobek.IsUndefined(val) && !sobek.IsNull(val) {
 			if obj := val.ToObject(h.Engine.VM); obj != nil {
 				then := obj.Get("then")
-				if then != nil && !goja.IsUndefined(then) {
-					if _, ok := goja.AssertFunction(then); ok {
+				if then != nil && !sobek.IsUndefined(then) {
+					if _, ok := sobek.AssertFunction(then); ok {
 						h.Engine.EventLoop.WGAdd(1)
 
-						onDone := h.Engine.VM.ToValue(func(goja.FunctionCall) goja.Value {
+						onDone := h.Engine.VM.ToValue(func(sobek.FunctionCall) sobek.Value {
 							h.Engine.EventLoop.WGDone()
 							done <- nil // Success
-							return goja.Undefined()
+							return sobek.Undefined()
 						})
 
-						onErr := h.Engine.VM.ToValue(func(call goja.FunctionCall) goja.Value {
+						onErr := h.Engine.VM.ToValue(func(call sobek.FunctionCall) sobek.Value {
 							h.Engine.EventLoop.WGDone()
 							// call.Argument(0) is the error
 							errVal := call.Argument(0)
 							done <- jsError{errVal}
-							return goja.Undefined()
+							return sobek.Undefined()
 						})
 
-						thenFn, _ := goja.AssertFunction(then)
+						thenFn, _ := sobek.AssertFunction(then)
 						_, _ = thenFn(val, onDone, onErr)
 						return
 					}
@@ -94,7 +94,7 @@ func (h *TestHarness) Run(t *testing.T, code string) {
 }
 
 type jsError struct {
-	val goja.Value
+	val sobek.Value
 }
 
 func (e jsError) Error() string { return e.val.String() }

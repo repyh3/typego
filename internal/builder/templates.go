@@ -16,7 +16,7 @@ import (
 
 	%[1]s
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/bridge/polyfills"
 	"github.com/repyh/typego/engine"
 )
@@ -54,17 +54,17 @@ func main() {
 		}
 
 		// Handle Top-Level Async (Promises)
-		if val != nil && !goja.IsUndefined(val) && !goja.IsNull(val) {
+		if val != nil && !sobek.IsUndefined(val) && !sobek.IsNull(val) {
 			if obj := val.ToObject(eng.VM); obj != nil {
 				then := obj.Get("then")
-				if then != nil && !goja.IsUndefined(then) {
-					if _, ok := goja.AssertFunction(then); ok {
+				if then != nil && !sobek.IsUndefined(then) {
+					if _, ok := sobek.AssertFunction(then); ok {
 						eng.EventLoop.WGAdd(1)
-						done := eng.VM.ToValue(func(goja.FunctionCall) goja.Value {
+						done := eng.VM.ToValue(func(sobek.FunctionCall) sobek.Value {
 							eng.EventLoop.WGDone()
-							return goja.Undefined()
+							return sobek.Undefined()
 						})
-						thenFn, _ := goja.AssertFunction(then)
+						thenFn, _ := sobek.AssertFunction(then)
 						_, _ = thenFn(val, done, done)
 					}
 				}

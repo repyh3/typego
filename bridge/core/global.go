@@ -1,13 +1,13 @@
 package core
 
 import (
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 )
 
-func RegisterGlobals(vm *goja.Runtime) {
-	_ = vm.Set("isGoError", func(call goja.FunctionCall) goja.Value {
+func RegisterGlobals(vm *sobek.Runtime) {
+	_ = vm.Set("isGoError", func(call sobek.FunctionCall) sobek.Value {
 		arg := call.Argument(0)
-		if goja.IsNull(arg) || goja.IsUndefined(arg) {
+		if sobek.IsNull(arg) || sobek.IsUndefined(arg) {
 			return vm.ToValue(false)
 		}
 
@@ -17,7 +17,7 @@ func RegisterGlobals(vm *goja.Runtime) {
 		}
 
 		msg := obj.Get("message")
-		if msg != nil && !goja.IsUndefined(msg) {
+		if msg != nil && !sobek.IsUndefined(msg) {
 			return vm.ToValue(true)
 		}
 

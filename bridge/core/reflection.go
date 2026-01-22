@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 )
 
 // Binding represents a Go struct that has been bound to the JavaScript runtime.
@@ -15,8 +15,8 @@ type Binding struct {
 
 // BindStruct exposes a Go struct to JavaScript with full field and method access.
 // Supports nested structs (converted recursively) and callback arguments.
-func BindStruct(vm *goja.Runtime, name string, s interface{}) error {
-	obj, err := bindValue(vm, reflect.ValueOf(s), make(map[uintptr]goja.Value))
+func BindStruct(vm *sobek.Runtime, name string, s interface{}) error {
+	obj, err := bindValue(vm, reflect.ValueOf(s), make(map[uintptr]sobek.Value))
 	if err != nil {
 		return err
 	}
@@ -25,14 +25,14 @@ func BindStruct(vm *goja.Runtime, name string, s interface{}) error {
 
 // bindValue recursively converts a Go value to a JavaScript value.
 // The visited map prevents infinite loops for circular references.
-func bindValue(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Value) (goja.Value, error) {
+func bindValue(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Value) (sobek.Value, error) {
 	if !v.IsValid() {
-		return goja.Undefined(), nil
+		return sobek.Undefined(), nil
 	}
 
 	if v.Kind() == reflect.Ptr {
 		if v.IsNil() {
-			return goja.Null(), nil
+			return sobek.Null(), nil
 		}
 		ptr := v.Pointer()
 		if cached, ok := visited[ptr]; ok {
@@ -55,7 +55,7 @@ func bindValue(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Value
 	}
 }
 
-func bindStruct(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Value) (goja.Value, error) {
+func bindStruct(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Value) (sobek.Value, error) {
 	t := v.Type()
 	obj := vm.NewObject()
 
@@ -82,7 +82,7 @@ func bindStruct(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Valu
 	return obj, nil
 }
 
-func bindMethods(vm *goja.Runtime, obj *goja.Object, v reflect.Value, visited map[uintptr]goja.Value) {
+func bindMethods(vm *sobek.Runtime, obj *sobek.Object, v reflect.Value, visited map[uintptr]sobek.Value) {
 	var vPtr reflect.Value
 	if v.CanAddr() {
 		vPtr = v.Addr()
@@ -106,8 +106,8 @@ func bindMethods(vm *goja.Runtime, obj *goja.Object, v reflect.Value, visited ma
 	}
 }
 
-func createMethodWrapper(vm *goja.Runtime, methodVal reflect.Value, methodName string, visited map[uintptr]goja.Value) func(goja.FunctionCall) goja.Value {
-	return func(call goja.FunctionCall) goja.Value {
+func createMethodWrapper(vm *sobek.Runtime, methodVal reflect.Value, methodName string, visited map[uintptr]sobek.Value) func(sobek.FunctionCall) sobek.Value {
+	return func(call sobek.FunctionCall) sobek.Value {
 		methodType := methodVal.Type()
 		numIn := methodType.NumIn()
 		goArgs := make([]reflect.Value, numIn)
@@ -130,7 +130,7 @@ func createMethodWrapper(vm *goja.Runtime, methodVal reflect.Value, methodName s
 		results := methodVal.Call(goArgs)
 
 		if len(results) == 0 {
-			return goja.Undefined()
+			return sobek.Undefined()
 		}
 
 		if len(results) == 1 {
@@ -147,9 +147,9 @@ func createMethodWrapper(vm *goja.Runtime, methodVal reflect.Value, methodName s
 	}
 }
 
-func convertJSToGo(vm *goja.Runtime, jsVal goja.Value, goType reflect.Type) (reflect.Value, error) {
+func convertJSToGo(vm *sobek.Runtime, jsVal sobek.Value, goType reflect.Type) (reflect.Value, error) {
 	if goType.Kind() == reflect.Func {
-		callable, ok := goja.AssertFunction(jsVal)
+		callable, ok := sobek.AssertFunction(jsVal)
 		if !ok {
 			return reflect.Value{}, fmt.Errorf("expected function, got %T", jsVal.Export())
 		}
@@ -174,14 +174,14 @@ func convertJSToGo(vm *goja.Runtime, jsVal goja.Value, goType reflect.Type) (ref
 	return reflect.Value{}, fmt.Errorf("expected %s, got %T", goType, exported)
 }
 
-func wrapJSCallback(vm *goja.Runtime, callable goja.Callable, goType reflect.Type) reflect.Value {
+func wrapJSCallback(vm *sobek.Runtime, callable sobek.Callable, goType reflect.Type) reflect.Value {
 	return reflect.MakeFunc(goType, func(args []reflect.Value) []reflect.Value {
-		jsArgs := make([]goja.Value, len(args))
+		jsArgs := make([]sobek.Value, len(args))
 		for i, arg := range args {
 			jsArgs[i] = vm.ToValue(arg.Interface())
 		}
 
-		result, err := callable(goja.Undefined(), jsArgs...)
+		result, err := callable(sobek.Undefined(), jsArgs...)
 		if err != nil {
 			// Return zero values on error
 			numOut := goType.NumOut()
@@ -211,7 +211,7 @@ func wrapJSCallback(vm *goja.Runtime, callable goja.Callable, goType reflect.Typ
 	})
 }
 
-func bindSlice(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Value) (goja.Value, error) {
+func bindSlice(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Value) (sobek.Value, error) {
 	arr := vm.NewArray()
 	for i := 0; i < v.Len(); i++ {
 		elem, err := bindValue(vm, v.Index(i), visited)
@@ -223,7 +223,7 @@ func bindSlice(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Value
 	return arr, nil
 }
 
-func bindMap(vm *goja.Runtime, v reflect.Value, visited map[uintptr]goja.Value) (goja.Value, error) {
+func bindMap(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Value) (sobek.Value, error) {
 	obj := vm.NewObject()
 	for _, key := range v.MapKeys() {
 		keyStr := fmt.Sprintf("%v", key.Interface())

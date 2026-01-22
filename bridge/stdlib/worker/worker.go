@@ -2,29 +2,29 @@
 package worker
 
 import (
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/eventloop"
 )
 
 type Handle interface {
-	PostMessage(msg goja.Value)
+	PostMessage(msg sobek.Value)
 	Terminate()
 }
 
-type Spawner func(scriptPath string, onMessage func(goja.Value)) (Handle, error)
+type Spawner func(scriptPath string, onMessage func(sobek.Value)) (Handle, error)
 
-func Register(vm *goja.Runtime, el *eventloop.EventLoop, spawner Spawner) {
+func Register(vm *sobek.Runtime, el *eventloop.EventLoop, spawner Spawner) {
 	obj := vm.NewObject()
 
-	_ = obj.Set("Worker", func(call goja.ConstructorCall) *goja.Object {
+	_ = obj.Set("Worker", func(call sobek.ConstructorCall) *sobek.Object {
 		scriptPath := call.Argument(0).String()
 
 		workerObj := vm.NewObject()
 
-		onWorkerMessage := func(msg goja.Value) {
+		onWorkerMessage := func(msg sobek.Value) {
 			el.RunOnLoop(func() {
 				if onMsg := workerObj.Get("onmessage"); onMsg != nil {
-					if fn, ok := goja.AssertFunction(onMsg); ok {
+					if fn, ok := sobek.AssertFunction(onMsg); ok {
 						event := vm.NewObject()
 						_ = event.Set("data", msg)
 						_, _ = fn(workerObj, event)
@@ -38,15 +38,15 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop, spawner Spawner) {
 			panic(vm.NewGoError(err))
 		}
 
-		_ = workerObj.Set("postMessage", func(call goja.FunctionCall) goja.Value {
+		_ = workerObj.Set("postMessage", func(call sobek.FunctionCall) sobek.Value {
 			msg := call.Argument(0)
 			handle.PostMessage(msg)
-			return goja.Undefined()
+			return sobek.Undefined()
 		})
 
-		_ = workerObj.Set("terminate", func(call goja.FunctionCall) goja.Value {
+		_ = workerObj.Set("terminate", func(call sobek.FunctionCall) sobek.Value {
 			handle.Terminate()
-			return goja.Undefined()
+			return sobek.Undefined()
 		})
 
 		return workerObj
@@ -55,13 +55,13 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop, spawner Spawner) {
 	_ = vm.Set("__typego_worker__", obj)
 }
 
-func RegisterSelf(vm *goja.Runtime, postToParent func(msg goja.Value)) {
+func RegisterSelf(vm *sobek.Runtime, postToParent func(msg sobek.Value)) {
 	self := vm.GlobalObject()
 	_ = vm.Set("self", self)
 
-	_ = self.Set("postMessage", func(call goja.FunctionCall) goja.Value {
+	_ = self.Set("postMessage", func(call sobek.FunctionCall) sobek.Value {
 		msg := call.Argument(0)
 		postToParent(msg)
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 }

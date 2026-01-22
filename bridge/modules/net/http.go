@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/bridge/core"
 	"github.com/repyh/typego/eventloop"
 )
@@ -24,7 +24,7 @@ func (m *httpModule) Name() string {
 	return "go:net/http"
 }
 
-func (m *httpModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
+func (m *httpModule) Register(vm *sobek.Runtime, el *eventloop.EventLoop) {
 	m.el = el
 	Register(vm, el)
 }
@@ -38,8 +38,8 @@ const maxResponseBodySize = 50 * 1024 * 1024 // 50MB
 
 type Module struct{}
 
-func (h *Module) Get(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
-	return func(call goja.FunctionCall) goja.Value {
+func (h *Module) Get(vm *sobek.Runtime) func(sobek.FunctionCall) sobek.Value {
+	return func(call sobek.FunctionCall) sobek.Value {
 		url := call.Argument(0).String()
 
 		resp, err := httpClient.Get(url)
@@ -67,14 +67,14 @@ func (h *Module) Get(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	}
 }
 
-func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
+func Register(vm *sobek.Runtime, el *eventloop.EventLoop) {
 	h := &Module{}
 	server := NewServer(vm, el)
 
 	obj := vm.NewObject()
 	_ = obj.Set("Get", h.Get(vm))
 
-	_ = obj.Set("Post", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("Post", func(call sobek.FunctionCall) sobek.Value {
 		url := call.Argument(0).String()
 		body := call.Argument(1).String()
 		contentType := "application/json"
@@ -123,7 +123,7 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 		return p
 	})
 
-	_ = obj.Set("Fetch", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("Fetch", func(call sobek.FunctionCall) sobek.Value {
 		url := call.Argument(0).String()
 		p, resolve, reject := el.CreatePromise()
 
@@ -161,9 +161,9 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 		return p
 	})
 
-	_ = obj.Set("ListenAndServe", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("ListenAndServe", func(call sobek.FunctionCall) sobek.Value {
 		addr := call.Argument(0).String()
-		handler, ok := goja.AssertFunction(call.Argument(1))
+		handler, ok := sobek.AssertFunction(call.Argument(1))
 		if !ok {
 			panic(vm.NewTypeError("ListenAndServe requires a handler function"))
 		}
@@ -174,7 +174,7 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 
 		// Return the server for later shutdown
 		srvObj := vm.NewObject()
-		_ = srvObj.Set("close", func(call goja.FunctionCall) goja.Value {
+		_ = srvObj.Set("close", func(call sobek.FunctionCall) sobek.Value {
 			timeout := 5 * time.Second
 			if len(call.Arguments) > 0 {
 				timeout = time.Duration(call.Argument(0).ToInteger()) * time.Millisecond
@@ -182,7 +182,7 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop) {
 			if err := server.Close(timeout); err != nil {
 				panic(vm.NewGoError(err))
 			}
-			return goja.Undefined()
+			return sobek.Undefined()
 		})
 		return srvObj
 	})

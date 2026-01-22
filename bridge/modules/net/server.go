@@ -9,25 +9,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/eventloop"
 )
 
 type Server struct {
 	server *http.Server
 	el     *eventloop.EventLoop
-	vm     *goja.Runtime
+	vm     *sobek.Runtime
 	mu     sync.Mutex
 }
 
-func NewServer(vm *goja.Runtime, el *eventloop.EventLoop) *Server {
+func NewServer(vm *sobek.Runtime, el *eventloop.EventLoop) *Server {
 	return &Server{
 		vm: vm,
 		el: el,
 	}
 }
 
-func (s *Server) ListenAndServe(addr string, handler goja.Callable) error {
+func (s *Server) ListenAndServe(addr string, handler sobek.Callable) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -46,7 +46,7 @@ func (s *Server) ListenAndServe(addr string, handler goja.Callable) error {
 			s.el.RunOnLoop(func() {
 				defer close(done)
 				// Call the JS handler with (req, res)
-				_, err := handler(goja.Undefined(), req, res)
+				_, err := handler(sobek.Undefined(), req, res)
 				if err != nil {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				}
@@ -82,7 +82,7 @@ func (s *Server) Close(timeout time.Duration) error {
 	return s.server.Shutdown(ctx)
 }
 
-func (s *Server) wrapRequest(r *http.Request) goja.Value {
+func (s *Server) wrapRequest(r *http.Request) sobek.Value {
 	req := s.vm.NewObject()
 
 	// Basic properties
@@ -115,7 +115,7 @@ func (s *Server) wrapRequest(r *http.Request) goja.Value {
 	_ = req.Set("headers", headers)
 
 	// Body reader (async)
-	_ = req.Set("body", func(call goja.FunctionCall) goja.Value {
+	_ = req.Set("body", func(call sobek.FunctionCall) sobek.Value {
 		p, resolve, reject := s.el.CreatePromise()
 
 		go func() {
@@ -133,7 +133,7 @@ func (s *Server) wrapRequest(r *http.Request) goja.Value {
 	})
 
 	// Convenience: get body sync (for small payloads)
-	_ = req.Set("bodySync", func(call goja.FunctionCall) goja.Value {
+	_ = req.Set("bodySync", func(call sobek.FunctionCall) sobek.Value {
 		body, err := io.ReadAll(io.LimitReader(r.Body, 10*1024*1024))
 		if err != nil {
 			panic(s.vm.NewGoError(err))
@@ -144,24 +144,24 @@ func (s *Server) wrapRequest(r *http.Request) goja.Value {
 	return req
 }
 
-func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value {
+func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) sobek.Value {
 	res := s.vm.NewObject()
 	headersSent := false
 	statusCode := 200
 
-	_ = res.Set("setHeader", func(call goja.FunctionCall) goja.Value {
+	_ = res.Set("setHeader", func(call sobek.FunctionCall) sobek.Value {
 		key := call.Argument(0).String()
 		value := call.Argument(1).String()
 		w.Header().Set(key, value)
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 
-	_ = res.Set("status", func(call goja.FunctionCall) goja.Value {
+	_ = res.Set("status", func(call sobek.FunctionCall) sobek.Value {
 		statusCode = int(call.Argument(0).ToInteger())
 		return res // Chainable
 	})
 
-	_ = res.Set("write", func(call goja.FunctionCall) goja.Value {
+	_ = res.Set("write", func(call sobek.FunctionCall) sobek.Value {
 		if !headersSent {
 			w.WriteHeader(statusCode)
 			headersSent = true
@@ -172,7 +172,7 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 	})
 
 	// Send response and end
-	_ = res.Set("send", func(call goja.FunctionCall) goja.Value {
+	_ = res.Set("send", func(call sobek.FunctionCall) sobek.Value {
 		if !headersSent {
 			w.WriteHeader(statusCode)
 			headersSent = true
@@ -181,11 +181,11 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 			data := call.Argument(0).String()
 			_, _ = w.Write([]byte(data))
 		}
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 
 	// Send JSON response
-	_ = res.Set("json", func(call goja.FunctionCall) goja.Value {
+	_ = res.Set("json", func(call sobek.FunctionCall) sobek.Value {
 		w.Header().Set("Content-Type", "application/json")
 		if !headersSent {
 			w.WriteHeader(statusCode)
@@ -199,18 +199,18 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) goja.Value
 			}
 			_, _ = w.Write([]byte(jsonStr))
 		}
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 
 	// Redirect
-	_ = res.Set("redirect", func(call goja.FunctionCall) goja.Value {
+	_ = res.Set("redirect", func(call sobek.FunctionCall) sobek.Value {
 		url := call.Argument(0).String()
 		code := 302
 		if len(call.Arguments) > 1 {
 			code = int(call.Argument(1).ToInteger())
 		}
 		http.Redirect(w, r, url, code)
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 
 	return res

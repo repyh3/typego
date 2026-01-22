@@ -1,8 +1,8 @@
 package polyfills
 
-import "github.com/dop251/goja"
+import "github.com/grafana/sobek"
 
-// EncodingShimJS provides TextEncoder and TextDecoder polyfills for the Goja runtime.
+// EncodingShimJS provides TextEncoder and TextDecoder polyfills for the Sobek runtime.
 // These are Web APIs commonly used for string/byte conversion.
 const EncodingShimJS = `
 (function() {
@@ -59,6 +59,6 @@ const EncodingShimJS = `
 `
 
 // EnableEncoding injects TextEncoder and TextDecoder globals.
-func EnableEncoding(vm *goja.Runtime) {
+func EnableEncoding(vm *sobek.Runtime) {
 	_, _ = vm.RunString(EncodingShimJS)
 }

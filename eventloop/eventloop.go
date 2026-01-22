@@ -4,13 +4,13 @@ import (
 	"context"
 	"sync"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 )
 
 type RejectionHandler func(err error)
 
 type EventLoop struct {
-	VM       *goja.Runtime
+	VM       *sobek.Runtime
 	jobQueue chan func()
 	stopChan chan struct{}
 	wg       sync.WaitGroup
@@ -24,7 +24,7 @@ type EventLoop struct {
 	OnUnhandledRejection RejectionHandler
 }
 
-func NewEventLoop(vm *goja.Runtime) *EventLoop {
+func NewEventLoop(vm *sobek.Runtime) *EventLoop {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &EventLoop{
 		VM:       vm,
@@ -118,7 +118,7 @@ func (el *EventLoop) WGDone() {
 	el.wg.Done()
 }
 
-func (el *EventLoop) CreatePromise() (promise *goja.Object, resolve func(interface{}), reject func(interface{})) {
+func (el *EventLoop) CreatePromise() (promise *sobek.Object, resolve func(interface{}), reject func(interface{})) {
 	p, res, rej := el.VM.NewPromise()
 
 	// Keep the loop alive until the promise is settled

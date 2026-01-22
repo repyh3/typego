@@ -67,7 +67,7 @@ typego/
 ├── bridge/          # Native bindings between Go and JavaScript
 ├── cmd/typego/      # CLI entry point (Cobra root)
 ├── compiler/        # ESBuild wrapper for bundling and caching
-├── engine/          # Core Goja runtime wrapper
+├── engine/          # Core Sobek runtime wrapper
 ├── eventloop/       # Asynchronous execution loop
 │
 ├── internal/

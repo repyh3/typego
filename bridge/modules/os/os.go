@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/bridge/core"
 	"github.com/repyh/typego/eventloop"
 )
@@ -22,7 +22,7 @@ func (m *osModule) Name() string {
 	return "go:os"
 }
 
-func (m *osModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
+func (m *osModule) Register(vm *sobek.Runtime, el *eventloop.EventLoop) {
 	Register(vm)
 }
 
@@ -64,8 +64,8 @@ func (m *Module) sanitizePath(path string) (string, error) {
 	return realPath, nil
 }
 
-func (m *Module) WriteFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
-	return func(call goja.FunctionCall) goja.Value {
+func (m *Module) WriteFile(vm *sobek.Runtime) func(sobek.FunctionCall) sobek.Value {
+	return func(call sobek.FunctionCall) sobek.Value {
 		path := call.Argument(0).String()
 		data := call.Argument(1).String()
 
@@ -79,12 +79,12 @@ func (m *Module) WriteFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value 
 			panic(vm.NewTypeError(fmt.Sprintf("os.WriteFile error: %v", err)))
 		}
 
-		return goja.Undefined()
+		return sobek.Undefined()
 	}
 }
 
-func (m *Module) ReadFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
-	return func(call goja.FunctionCall) goja.Value {
+func (m *Module) ReadFile(vm *sobek.Runtime) func(sobek.FunctionCall) sobek.Value {
+	return func(call sobek.FunctionCall) sobek.Value {
 		path := call.Argument(0).String()
 
 		safePath, err := m.sanitizePath(path)
@@ -101,7 +101,7 @@ func (m *Module) ReadFile(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	}
 }
 
-func Register(vm *goja.Runtime) {
+func Register(vm *sobek.Runtime) {
 	wd, _ := os.Getwd()
 	absRoot, _ := filepath.Abs(wd)
 	m := &Module{Root: absRoot}
@@ -110,12 +110,12 @@ func Register(vm *goja.Runtime) {
 	_ = obj.Set("WriteFile", m.WriteFile(vm))
 	_ = obj.Set("ReadFile", m.ReadFile(vm))
 
-	_ = obj.Set("Getenv", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("Getenv", func(call sobek.FunctionCall) sobek.Value {
 		key := call.Argument(0).String()
 		return vm.ToValue(os.Getenv(key))
 	})
 
-	_ = obj.Set("LookupEnv", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("LookupEnv", func(call sobek.FunctionCall) sobek.Value {
 		key := call.Argument(0).String()
 		val, ok := os.LookupEnv(key)
 		result := vm.NewObject()
@@ -124,15 +124,15 @@ func Register(vm *goja.Runtime) {
 		return result
 	})
 
-	_ = obj.Set("Exit", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("Exit", func(call sobek.FunctionCall) sobek.Value {
 		code := int(call.Argument(0).ToInteger())
 		os.Exit(code)
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 
 	_ = obj.Set("Args", vm.ToValue(os.Args))
 
-	_ = obj.Set("Cwd", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("Cwd", func(call sobek.FunctionCall) sobek.Value {
 		wd, err := os.Getwd()
 		if err != nil {
 			panic(vm.NewGoError(err))
@@ -140,23 +140,23 @@ func Register(vm *goja.Runtime) {
 		return vm.ToValue(wd)
 	})
 
-	_ = obj.Set("Mkdir", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("Mkdir", func(call sobek.FunctionCall) sobek.Value {
 		path := call.Argument(0).String()
 		if err := os.Mkdir(path, 0755); err != nil {
 			panic(vm.NewGoError(err))
 		}
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 
-	_ = obj.Set("MkdirAll", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("MkdirAll", func(call sobek.FunctionCall) sobek.Value {
 		path := call.Argument(0).String()
 		if err := os.MkdirAll(path, 0755); err != nil {
 			panic(vm.NewGoError(err))
 		}
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 
-	_ = obj.Set("Remove", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("Remove", func(call sobek.FunctionCall) sobek.Value {
 		path := call.Argument(0).String()
 		safePath, err := m.sanitizePath(path)
 		if err != nil {
@@ -165,10 +165,10 @@ func Register(vm *goja.Runtime) {
 		if err := os.Remove(safePath); err != nil {
 			panic(vm.NewGoError(err))
 		}
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 
-	_ = obj.Set("RemoveAll", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("RemoveAll", func(call sobek.FunctionCall) sobek.Value {
 		path := call.Argument(0).String()
 		safePath, err := m.sanitizePath(path)
 		if err != nil {
@@ -177,7 +177,7 @@ func Register(vm *goja.Runtime) {
 		if err := os.RemoveAll(safePath); err != nil {
 			panic(vm.NewGoError(err))
 		}
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 
 	_ = vm.Set("__go_os__", obj)

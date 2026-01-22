@@ -3,28 +3,28 @@ package polyfills
 import (
 	"time"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/eventloop"
 )
 
 // EnableTimers injects setTimeout and setInterval globals
-func EnableTimers(vm *goja.Runtime, el *eventloop.EventLoop) {
-	_ = vm.Set("setTimeout", func(call goja.FunctionCall) goja.Value {
-		fn, _ := goja.AssertFunction(call.Argument(0))
+func EnableTimers(vm *sobek.Runtime, el *eventloop.EventLoop) {
+	_ = vm.Set("setTimeout", func(call sobek.FunctionCall) sobek.Value {
+		fn, _ := sobek.AssertFunction(call.Argument(0))
 		ms := call.Argument(1).ToInteger()
 		el.WGAdd(1)
 		go func() {
 			time.Sleep(time.Duration(ms) * time.Millisecond)
 			el.RunOnLoop(func() {
-				_, _ = fn(goja.Undefined())
+				_, _ = fn(sobek.Undefined())
 				el.WGDone()
 			})
 		}()
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 
-	_ = vm.Set("setInterval", func(call goja.FunctionCall) goja.Value {
-		fn, _ := goja.AssertFunction(call.Argument(0))
+	_ = vm.Set("setInterval", func(call sobek.FunctionCall) sobek.Value {
+		fn, _ := sobek.AssertFunction(call.Argument(0))
 		ms := call.Argument(1).ToInteger()
 
 		stop := make(chan struct{})
@@ -36,7 +36,7 @@ func EnableTimers(vm *goja.Runtime, el *eventloop.EventLoop) {
 				select {
 				case <-ticker.C:
 					el.RunOnLoop(func() {
-						_, _ = fn(goja.Undefined())
+						_, _ = fn(sobek.Undefined())
 					})
 				case <-stop:
 					return
@@ -50,7 +50,7 @@ func EnableTimers(vm *goja.Runtime, el *eventloop.EventLoop) {
 		return id
 	})
 
-	_ = vm.Set("clearInterval", func(call goja.FunctionCall) goja.Value {
+	_ = vm.Set("clearInterval", func(call sobek.FunctionCall) sobek.Value {
 		obj := call.Argument(0).ToObject(vm)
 		if obj != nil {
 			if ch := obj.Get("__stop__"); ch != nil {
@@ -59,6 +59,6 @@ func EnableTimers(vm *goja.Runtime, el *eventloop.EventLoop) {
 				}
 			}
 		}
-		return goja.Undefined()
+		return sobek.Undefined()
 	})
 }

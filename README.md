@@ -11,7 +11,7 @@ typego is an embedded TypeScript runtime for Go. It lets you script Go applicati
 > [!NOTE]
 > **Project Status**: TypeGo is under active development. However, please note that **maintenance is limited** as I am balancing this project with my university commitments. Issues and PRs are welcome but may see delayed responses.
 
-Unlike typical runtimes that communicate over IPC or JSON-RPC, typego runs a JS engine (Goja) directly inside your Go process. You can import Go packages as if they were native TS modules using the go: prefix, allowing for zero-copy data sharing and direct access to Go’s standard library.
+Unlike typical runtimes that communicate over IPC or JSON-RPC, typego runs a JS engine (Sobek) directly inside your Go process. You can import Go packages as if they were native TS modules using the go: prefix, allowing for zero-copy data sharing and direct access to Go’s standard library.
 
 ## Features
 
@@ -24,7 +24,7 @@ Unlike typical runtimes that communicate over IPC or JSON-RPC, typego runs a JS 
 ## Tech Stack
 
 - **Language**: Go 1.21+, TypeScript
-- **JS Engine**: Goja (pure Go, no CGO)
+- **JS Engine**: Sobek (fork of Goja, pure Go)
 - **Bundler**: esbuild
 - **CLI**: Cobra
 

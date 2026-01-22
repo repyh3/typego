@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"sync" // standard sync
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	modulesync "github.com/repyh/typego/bridge/modules/sync" // TypeGo sync module
 	"github.com/repyh/typego/eventloop"
 )
@@ -49,8 +49,8 @@ type Module struct {
 }
 
 // GetStats returns memory statistics to JS.
-func (m *Module) GetStats(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
-	return func(call goja.FunctionCall) goja.Value {
+func (m *Module) GetStats(vm *sobek.Runtime) func(sobek.FunctionCall) sobek.Value {
+	return func(call sobek.FunctionCall) sobek.Value {
 		var ms runtime.MemStats
 		runtime.ReadMemStats(&ms)
 
@@ -65,7 +65,7 @@ func (m *Module) GetStats(vm *goja.Runtime) func(goja.FunctionCall) goja.Value {
 }
 
 // Register injects the typego:memory module into the runtime.
-func Register(vm *goja.Runtime, el *eventloop.EventLoop, f *Factory) {
+func Register(vm *sobek.Runtime, el *eventloop.EventLoop, f *Factory) {
 	if f == nil {
 		f = NewFactory()
 	}
@@ -74,7 +74,7 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop, f *Factory) {
 	obj := vm.NewObject()
 	_ = obj.Set("stats", m.GetStats(vm))
 
-	_ = obj.Set("makeShared", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("makeShared", func(call sobek.FunctionCall) sobek.Value {
 		name := call.Argument(0).String()
 		size := int(call.Argument(1).ToInteger())
 
@@ -97,7 +97,7 @@ func Register(vm *goja.Runtime, el *eventloop.EventLoop, f *Factory) {
 	})
 
 	// Ptr factory for referencing values
-	_ = obj.Set("ptr", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("ptr", func(call sobek.FunctionCall) sobek.Value {
 		val := call.Argument(0)
 		return val
 	})

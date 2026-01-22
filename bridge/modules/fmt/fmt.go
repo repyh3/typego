@@ -4,7 +4,7 @@ package fmt
 import (
 	"fmt"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/bridge/core"
 	"github.com/repyh/typego/eventloop"
 )
@@ -19,32 +19,32 @@ func (m *fmtModule) Name() string {
 	return "go:fmt"
 }
 
-func (m *fmtModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
+func (m *fmtModule) Register(vm *sobek.Runtime, el *eventloop.EventLoop) {
 	Register(vm)
 }
 
 type Module struct{}
 
-func (f *Module) Println(call goja.FunctionCall) goja.Value {
+func (f *Module) Println(call sobek.FunctionCall) sobek.Value {
 	args := make([]interface{}, len(call.Arguments))
 	for i, arg := range call.Arguments {
 		args[i] = arg.Export()
 	}
 	fmt.Println(args...)
-	return goja.Undefined()
+	return sobek.Undefined()
 }
 
-func (f *Module) Printf(call goja.FunctionCall) goja.Value {
+func (f *Module) Printf(call sobek.FunctionCall) sobek.Value {
 	format := call.Argument(0).String()
 	args := make([]interface{}, len(call.Arguments)-1)
 	for i, arg := range call.Arguments[1:] {
 		args[i] = arg.Export()
 	}
 	fmt.Printf(format, args...)
-	return goja.Undefined()
+	return sobek.Undefined()
 }
 
-func Register(vm *goja.Runtime) {
+func Register(vm *sobek.Runtime) {
 	f := &Module{}
 
 	obj := vm.NewObject()

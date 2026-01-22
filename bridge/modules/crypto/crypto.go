@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/bridge/core"
 	"github.com/repyh/typego/eventloop"
 )
@@ -24,26 +24,26 @@ func (m *cryptoModule) Name() string {
 	return "go:crypto"
 }
 
-func (m *cryptoModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
+func (m *cryptoModule) Register(vm *sobek.Runtime, el *eventloop.EventLoop) {
 	Register(vm)
 }
 
-func Register(vm *goja.Runtime) {
+func Register(vm *sobek.Runtime) {
 	obj := vm.NewObject()
 
-	_ = obj.Set("Sha256", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("Sha256", func(call sobek.FunctionCall) sobek.Value {
 		data := call.Argument(0).String()
 		hash := sha256.Sum256([]byte(data))
 		return vm.ToValue(hex.EncodeToString(hash[:]))
 	})
 
-	_ = obj.Set("Sha512", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("Sha512", func(call sobek.FunctionCall) sobek.Value {
 		data := call.Argument(0).String()
 		hash := sha512.Sum512([]byte(data))
 		return vm.ToValue(hex.EncodeToString(hash[:]))
 	})
 
-	_ = obj.Set("HmacSha256", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("HmacSha256", func(call sobek.FunctionCall) sobek.Value {
 		key := call.Argument(0).String()
 		data := call.Argument(1).String()
 		mac := hmac.New(sha256.New, []byte(key))
@@ -51,7 +51,7 @@ func Register(vm *goja.Runtime) {
 		return vm.ToValue(hex.EncodeToString(mac.Sum(nil)))
 	})
 
-	_ = obj.Set("HmacSha256Verify", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("HmacSha256Verify", func(call sobek.FunctionCall) sobek.Value {
 		key := call.Argument(0).String()
 		data := call.Argument(1).String()
 		signature := call.Argument(2).String()
@@ -63,7 +63,7 @@ func Register(vm *goja.Runtime) {
 		return vm.ToValue(hmac.Equal([]byte(expected), []byte(signature)))
 	})
 
-	_ = obj.Set("RandomBytes", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("RandomBytes", func(call sobek.FunctionCall) sobek.Value {
 		n := int(call.Argument(0).ToInteger())
 		if n <= 0 || n > 1024*1024 {
 			panic(vm.NewTypeError("RandomBytes: size must be between 1 and 1048576"))
@@ -75,7 +75,7 @@ func Register(vm *goja.Runtime) {
 		return vm.ToValue(hex.EncodeToString(bytes))
 	})
 
-	_ = obj.Set("Uuid", func(call goja.FunctionCall) goja.Value {
+	_ = obj.Set("Uuid", func(call sobek.FunctionCall) sobek.Value {
 		uuid := make([]byte, 16)
 		if _, err := rand.Read(uuid); err != nil {
 			panic(vm.NewGoError(err))

@@ -137,7 +137,7 @@ go 1.23.6
 			"github.com/repyh/typego/bridge/polyfills",
 			"github.com/repyh/typego/engine",
 			"github.com/repyh/typego/eventloop",
-			"github.com/dop251/goja",
+			"github.com/grafana/sobek",
 		}
 		for _, pkg := range packages {
 			// If local dev, we don't want @latest for our own packages, but they are replaced anyway.

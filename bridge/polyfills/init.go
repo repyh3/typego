@@ -2,7 +2,7 @@
 package polyfills
 
 import (
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/eventloop"
 )
 
@@ -11,7 +11,7 @@ import (
 //   - Buffer: from(), alloc() for buffer operations
 //   - Timers: setTimeout, setInterval, clearInterval
 //   - Encoding: TextEncoder, TextDecoder for string/byte conversion
-func EnableAll(vm *goja.Runtime, el *eventloop.EventLoop) {
+func EnableAll(vm *sobek.Runtime, el *eventloop.EventLoop) {
 	EnableProcess(vm)
 	EnableBuffer(vm)
 	EnableTimers(vm, el)

@@ -4,7 +4,7 @@ package json
 import (
 	"encoding/json"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/bridge/core"
 	"github.com/repyh/typego/eventloop"
 )
@@ -19,11 +19,11 @@ func (m *jsonModule) Name() string {
 	return "go:encoding/json"
 }
 
-func (m *jsonModule) Register(vm *goja.Runtime, el *eventloop.EventLoop) {
+func (m *jsonModule) Register(vm *sobek.Runtime, el *eventloop.EventLoop) {
 	Register(vm)
 }
 
-func Register(vm *goja.Runtime) {
+func Register(vm *sobek.Runtime) {
 	obj := vm.NewObject()
 	_ = obj.Set("Marshal", marshal(vm))
 	_ = obj.Set("Unmarshal", unmarshal(vm))
@@ -32,8 +32,8 @@ func Register(vm *goja.Runtime) {
 	_ = vm.Set("__go_json__", obj)
 }
 
-func marshal(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
-	return func(call goja.FunctionCall) goja.Value {
+func marshal(vm *sobek.Runtime) func(call sobek.FunctionCall) sobek.Value {
+	return func(call sobek.FunctionCall) sobek.Value {
 		if len(call.Arguments) == 0 {
 			panic(vm.NewGoError(ErrMissingArgument))
 		}
@@ -43,7 +43,7 @@ func marshal(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
 		indent := ""
 		if len(call.Arguments) > 1 {
 			indentArg := call.Argument(1)
-			if !goja.IsUndefined(indentArg) && !goja.IsNull(indentArg) {
+			if !sobek.IsUndefined(indentArg) && !sobek.IsNull(indentArg) {
 				indent = indentArg.String()
 			}
 		}
@@ -65,8 +65,8 @@ func marshal(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
 	}
 }
 
-func unmarshal(vm *goja.Runtime) func(call goja.FunctionCall) goja.Value {
-	return func(call goja.FunctionCall) goja.Value {
+func unmarshal(vm *sobek.Runtime) func(call sobek.FunctionCall) sobek.Value {
+	return func(call sobek.FunctionCall) sobek.Value {
 		if len(call.Arguments) == 0 {
 			panic(vm.NewGoError(ErrMissingArgument))
 		}

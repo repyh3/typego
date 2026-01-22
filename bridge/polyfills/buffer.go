@@ -1,6 +1,6 @@
 package polyfills
 
-import "github.com/dop251/goja"
+import "github.com/grafana/sobek"
 
 // BufferShimJS is the JavaScript polyfill for the Buffer global
 const BufferShimJS = `if (typeof Buffer === 'undefined') { 
@@ -21,6 +21,6 @@ const BufferShimJS = `if (typeof Buffer === 'undefined') {
 }`
 
 // EnableBuffer injects the Buffer global via JavaScript
-func EnableBuffer(vm *goja.Runtime) {
+func EnableBuffer(vm *sobek.Runtime) {
 	_, _ = vm.RunString(BufferShimJS)
 }

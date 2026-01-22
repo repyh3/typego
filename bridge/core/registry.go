@@ -1,14 +1,14 @@
 package core
 
 import (
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/eventloop"
 )
 
 type Module interface {
 	// Name returns the module's import path (e.g., "go:fmt", "typego:memory")
 	Name() string
-	Register(vm *goja.Runtime, el *eventloop.EventLoop)
+	Register(vm *sobek.Runtime, el *eventloop.EventLoop)
 }
 
 var modules []Module
@@ -19,7 +19,7 @@ func RegisterModule(m Module) {
 }
 
 // Called once during engine startup.
-func InitAll(vm *goja.Runtime, el *eventloop.EventLoop) {
+func InitAll(vm *sobek.Runtime, el *eventloop.EventLoop) {
 	for _, m := range modules {
 		m.Register(vm, el)
 	}

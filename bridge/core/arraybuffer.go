@@ -6,7 +6,7 @@
 package core
 
 import (
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 )
 
 // ToArrayBuffer converts a Go byte slice to a JavaScript ArrayBuffer.
@@ -15,7 +15,7 @@ import (
 //
 // For shared memory scenarios where modifications should be visible to both
 // Go and JavaScript, use MapSharedBuffer instead.
-func ToArrayBuffer(vm *goja.Runtime, data []byte) goja.Value {
+func ToArrayBuffer(vm *sobek.Runtime, data []byte) sobek.Value {
 	return vm.ToValue(vm.NewArrayBuffer(data))
 }
 
@@ -33,7 +33,7 @@ func ToArrayBuffer(vm *goja.Runtime, data []byte) goja.Value {
 //	core.MapSharedBuffer(vm, "sharedBuffer", data)
 //	// In JS: sharedBuffer[0] = 42
 //	// In Go: data[0] == 42
-func MapSharedBuffer(vm *goja.Runtime, name string, data []byte) {
+func MapSharedBuffer(vm *sobek.Runtime, name string, data []byte) {
 	buf := vm.NewArrayBuffer(data)
 	view := vm.ToValue(vm.Get("Uint8Array")).ToObject(vm)
 	typedArray, _ := vm.New(view, vm.ToValue(buf))

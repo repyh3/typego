@@ -6,7 +6,7 @@ This document outlines the planned technical direction for **TypeGo**. Please no
 **Target**: Modernize the execution core and introduce low-level memory control.
 
 ### Core Engine & Linking
-- [ ] **Sobek Engine Migration**: Move from Goja to Sobek to support ES2017+ features (async/await, promises) and improve memory efficiency without using CGO.
+- [x] **Sobek Engine Migration**: Move from Goja to Sobek to support ES2017+ features (async/await, promises) and improve memory efficiency without using CGO.
 - [ ] **Recursive Linker Upgrade**: Support for recursive type resolution, Go struct embedding, and JIT interface inspection for transparent bridging.
 - [ ] **Global Intrinsics**: Support for Go-native keywords as top-level functions: `defer()`, `panic()`, and `sizeof()`.
 

@@ -3,19 +3,19 @@ package engine
 import (
 	"fmt"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/repyh/typego/bridge/stdlib/worker"
 	"github.com/repyh/typego/compiler"
 )
 
 type WorkerInstance struct {
-	vm     *goja.Runtime
+	vm     *sobek.Runtime
 	engine *Engine
 	inbox  chan interface{}
 	stop   chan struct{}
 }
 
-func (w *WorkerInstance) PostMessage(msg goja.Value) {
+func (w *WorkerInstance) PostMessage(msg sobek.Value) {
 	data := msg.Export()
 	w.inbox <- data
 }
@@ -24,7 +24,7 @@ func (w *WorkerInstance) Terminate() {
 	close(w.stop)
 }
 
-func (e *Engine) SpawnWorker(scriptPath string, onMessage func(goja.Value)) (worker.Handle, error) {
+func (e *Engine) SpawnWorker(scriptPath string, onMessage func(sobek.Value)) (worker.Handle, error) {
 	res, err := compiler.Compile(scriptPath, nil)
 	if err != nil {
 		return nil, fmt.Errorf("compile error: %w", err)
@@ -42,7 +42,7 @@ func (e *Engine) SpawnWorker(scriptPath string, onMessage func(goja.Value)) (wor
 		stop:   stop,
 	}
 
-	worker.RegisterSelf(workerEng.VM, func(msg goja.Value) {
+	worker.RegisterSelf(workerEng.VM, func(msg sobek.Value) {
 		data := msg.Export()
 		e.EventLoop.RunOnLoop(func() {
 			val := e.VM.ToValue(data)
@@ -67,7 +67,7 @@ func (e *Engine) SpawnWorker(scriptPath string, onMessage func(goja.Value)) (wor
 				workerEng.EventLoop.RunOnLoop(func() {
 					val := workerEng.VM.ToValue(msg)
 					if onMsg := workerEng.VM.GlobalObject().Get("onmessage"); onMsg != nil {
-						if fn, ok := goja.AssertFunction(onMsg); ok {
+						if fn, ok := sobek.AssertFunction(onMsg); ok {
 							event := workerEng.VM.NewObject()
 							_ = event.Set("data", val)
 							_, _ = fn(workerEng.VM.GlobalObject(), event)
