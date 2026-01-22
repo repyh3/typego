@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/evanw/esbuild/pkg/api"
+	"github.com/repyh/typego/compiler/plugins"
 )
 
 type Result struct {
@@ -42,6 +43,7 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 		Format:      api.FormatIIFE,
 		Sourcemap:   api.SourceMapInline,
 		Plugins: []api.Plugin{
+			plugins.DeferPlugin(),
 			{
 				Name: "typego-virtual",
 				Setup: func(build api.PluginBuild) {

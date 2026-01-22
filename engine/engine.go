@@ -10,10 +10,12 @@ import (
 
 	"github.com/grafana/sobek"
 	"github.com/repyh/typego/bridge/core"
+	"github.com/repyh/typego/bridge/intrinsics"
 	"github.com/repyh/typego/bridge/stdlib/memory"
 	"github.com/repyh/typego/bridge/stdlib/worker"
 	"github.com/repyh/typego/eventloop"
 
+	_ "github.com/repyh/typego/bridge/intrinsics"
 	_ "github.com/repyh/typego/bridge/modules/crypto"
 	_ "github.com/repyh/typego/bridge/modules/fmt"
 	_ "github.com/repyh/typego/bridge/modules/json"
@@ -79,6 +81,9 @@ func NewEngine(memoryLimit uint64, mf *memory.Factory) *Engine {
 	core.InitAll(vm, el)
 
 	ctx, cancel := context.WithCancel(context.Background())
+
+	// Enable Global Intrinsics (panic, sizeof, typego.scope)
+	intrinsics.Enable(vm)
 
 	eng := &Engine{
 		VM:            vm,
