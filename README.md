@@ -115,7 +115,7 @@ TypeGo uses a unique import scheme to distinguish between TypeScript/JS modules 
 ```typescript
 // Import standard Go packages
 // Access any package from the Go standard library by prefixing with 'go:'
-import { Println, Sprintf, Errorf } from "go:fmt";
+import { Println, Printf } from "go:fmt";
 import { Sleep } from "go:sync";
 
 // Import external Go modules (must be added via CLI first)
@@ -165,9 +165,9 @@ TypeGo exposes low-level Go primitives as global functions, allowing you to writ
 Access system-level process information globally via the `process` object.
 
 ```typescript
-// Environment Variables
-console.log(process.env.HOME);
-console.log(process.env.NODE_ENV); // Emulated
+// Environment Variables (whitelisted)
+console.log(process.env.PATH);
+console.log(process.env.USER);
 
 // Current Working Directory
 console.log(process.cwd());
@@ -228,19 +228,13 @@ TypeGo includes pre-bound versions of common Go standard library packages. These
 Print formatted output to stdout/stderr.
 
 ```typescript
-import { Println, Printf, Sprintf, Errorf } from "go:fmt";
+import { Println, Printf } from "go:fmt";
 
 // Basic printing
 Println("Hello", "World");
 
 // Formatted printing
 Printf("User %s has ID %d\n", "Alice", 123);
-
-// String formatting
-const msg = Sprintf("Value: %.2f", 3.14159);
-
-// Creating errors
-const err = Errorf("failed to connect: %s", "timeout");
 ```
 
 #### go:net/http
@@ -259,7 +253,7 @@ console.log(`Body: ${resp.Body}`); // Body is automatically read as string
 
 // POST with JSON
 const res = Post("https://api.example.com/users", JSON.stringify({ name: "Bob" }));
-console.log(res.StatusCode);
+res.then(r => console.log(r.StatusCode));
 
 // Fetch API (Promise-based wrapper)
 Fetch("https://example.com").then(r => {
@@ -272,10 +266,10 @@ Fetch("https://example.com").then(r => {
 const server = ListenAndServe(":8080", (w, r) => {
     // w: ResponseWriter, r: Request
     // Note: This callback signature adapts Go's handler interface
-    console.log("Received request:", r.Method, r.URL.Path);
+    console.log("Received request:", r.method, r.path);
 
     // Write response (conceptual)
-    // w.Write(encoder.encode("Hello from TypeGo!"));
+    // w.write("Hello from TypeGo!");
 });
 
 // Graceful shutdown
@@ -307,13 +301,13 @@ os.Remove("config.txt");
 os.RemoveAll("data");
 
 // Environment and Process
-const path = Getenv("PATH");
-if (Args.length > 1) {
-    console.log("First arg:", Args[1]);
+const path = os.Getenv("PATH");
+if (os.Args.length > 1) {
+    console.log("First arg:", os.Args[1]);
 }
 
 // Exit the program
-// Exit(1);
+// os.Exit(1);
 ```
 
 #### go:sync
@@ -342,7 +336,7 @@ import { makeShared } from "typego:memory";
 // This buffer is allocated in Go memory and mapped to both runtimes
 const sharedBuf = makeShared("globalCounter", 1024);
 
-const view = new Int32Array(sharedBuf.buffer);
+const view = new Int32Array(sharedBuf.buffer.buffer);
 Atomics.add(view, 0, 1); // Thread-safe atomic operation
 ```
 
@@ -360,8 +354,8 @@ const w = new Worker("./worker.ts");
 w.postMessage({ command: "process", data: [1, 2, 3] });
 
 // Receive messages from the worker
-w.onmessage = (msg) => {
-    console.log("Worker replied:", msg);
+w.onmessage = (event) => {
+    console.log("Worker replied:", event.data);
 };
 
 // Terminate the worker
@@ -486,16 +480,19 @@ Ensure resources are cleaned up when a scope exits.
 import { WriteFile, Remove } from "go:os";
 
 function processFile() {
-    const path = "temp.txt";
-    WriteFile(path, "data");
+    // scope provides 'defer' and 'recover'
+    typego.scope((defer) => {
+        const path = "temp.txt";
+        WriteFile(path, "data");
 
-    defer(() => {
-        Remove(path);
-        console.log("Temp file cleaned up");
+        defer(() => {
+            Remove(path);
+            console.log("Temp file cleaned up");
+        });
+
+        // Process file...
+        // If panic occurs here, Remove() is still called
     });
-
-    // Process file...
-    // If panic occurs here, Remove() is still called
 }
 ```
 
@@ -588,16 +585,16 @@ function loggingMiddleware(next) {
     return (w, r) => {
         const start = Date.now();
         next(w, r);
-        Println(r.Method, r.URL.Path, `${Date.now() - start}ms`);
+        Println(r.method, r.path, `${Date.now() - start}ms`);
     };
 }
 
 const handler = (w, r) => {
-    if (r.URL.Path === "/") {
-        // w.Write("Welcome!");
+    if (r.path === "/") {
+        // w.send("Welcome!");
         Println("Root visited");
     } else {
-        // w.WriteHeader(404);
+        // w.status(404);
     }
 };
 
@@ -638,7 +635,7 @@ jobs.close();
 
 // Collect results
 for (let a = 1; a <= 5; a++) {
-   // const res = results.recv();
+   // const res = await results.recv();
    // Println("Result:", res);
 }
 ```
@@ -664,9 +661,9 @@ Using a Redis client (`go-redis`).
 ```typescript
 // 1. typego add github.com/go-redis/redis/v8
 import { NewClient } from "go:github.com/go-redis/redis/v8";
-import { context } from "go:context";
+import { Background } from "go:context";
 
-const ctx = context.Background();
+const ctx = Background();
 const rdb = NewClient({
     Addr: "localhost:6379",
     Password: "",
