@@ -1,4 +1,3 @@
-// Package os provides bindings for Go's os package.
 package os
 
 import (

@@ -12,7 +12,6 @@ func GenerateShim(info *PackageInfo, variableName string) string {
 	sb.WriteString(fmt.Sprintf("\n\t// Bind %s\n", info.ImportPath))
 	sb.WriteString(fmt.Sprintf("\t%s := eng.VM.NewObject()\n", variableName))
 
-	// Bind top-level functions
 	for _, fn := range info.Exports {
 		sb.WriteString(fmt.Sprintf("\t%s.Set(%q, %s.%s)\n", variableName, fn.Name, info.Name, fn.Name))
 	}
@@ -44,7 +43,6 @@ func GenerateTypes(info *PackageInfo) string {
 	sb.WriteString(fmt.Sprintf("// MODULE: go:%s\n", info.ImportPath))
 	sb.WriteString(fmt.Sprintf("declare module \"go:%s\" {\n", info.ImportPath))
 
-	// Collect imports
 	imports := make(map[string]map[string]bool) // pkgPath -> typeName -> bool
 	for _, st := range info.Structs {
 		// Collect from fields
@@ -61,7 +59,6 @@ func GenerateTypes(info *PackageInfo) string {
 		}
 	}
 
-	// Generate import statements
 	for pkgPath, types := range imports {
 		var typeList []string
 		for t := range types {

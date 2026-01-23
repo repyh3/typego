@@ -25,13 +25,11 @@ func estimateSize(val sobek.Value) int64 {
 		return 0
 	}
 
-	// 1. Export to Go value to analyze
 	export := val.Export()
 	if export == nil {
 		return 0 // null/undefined
 	}
 
-	// 2. Use reflect for Go types
 	v := reflect.ValueOf(export)
 	switch v.Kind() {
 	case reflect.Bool:

@@ -1,4 +1,3 @@
-// Package sync provides bindings for Go's sync package and concurrency primitives.
 package sync
 
 import (

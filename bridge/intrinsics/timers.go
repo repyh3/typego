@@ -39,7 +39,6 @@ func (r *Registry) EnableTimers() {
 		if obj != nil {
 			if ch := obj.Get("__stop__"); ch != nil {
 				if stop, ok := ch.Export().(chan struct{}); ok {
-					// Check if closed
 					select {
 					case <-stop:
 					default:
@@ -72,7 +71,6 @@ func (r *Registry) EnableTimers() {
 			}
 		}()
 
-		// Return a simple ID object for clearInterval
 		id := r.vm.NewObject()
 		_ = id.Set("__stop__", stop)
 		return id

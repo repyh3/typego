@@ -1,4 +1,3 @@
-// Package fmt provides bindings for Go's fmt package.
 package fmt
 
 import (
