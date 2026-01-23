@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"sync"
 
 	"github.com/grafana/sobek"
@@ -354,10 +355,15 @@ func bindMap(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Value
 	obj := vm.NewObject()
 	for _, key := range v.MapKeys() {
 		var keyStr string
-		// @optimized: Avoid Sprintf if key is already a string.
-		if key.Kind() == reflect.String {
+		// @optimized: Use strconv for integer keys to avoid fmt.Sprint allocation.
+		switch key.Kind() {
+		case reflect.String:
 			keyStr = key.String()
-		} else {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			keyStr = strconv.FormatInt(key.Int(), 10)
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			keyStr = strconv.FormatUint(key.Uint(), 10)
+		default:
 			keyStr = fmt.Sprint(key.Interface())
 		}
 
