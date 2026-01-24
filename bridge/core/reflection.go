@@ -8,19 +8,16 @@ import (
 	"github.com/grafana/sobek"
 )
 
-// Binding represents a Go struct that has been bound to the JavaScript runtime.
 type Binding struct {
 	Name   string
 	Target interface{}
 }
 
-// methodInfo holds metadata about an exported method to avoid repeated reflection lookups.
 type methodInfo struct {
 	Name  string
 	Index int
 }
 
-// fieldInfo holds metadata about an exported field to avoid repeated reflection lookups.
 type fieldInfo struct {
 	Index     int
 	Name      string

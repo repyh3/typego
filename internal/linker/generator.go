@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// Binds both top-level functions and exported structs.
 func GenerateShim(info *PackageInfo, variableName string) string {
 	var sb strings.Builder
 
