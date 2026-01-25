@@ -6,7 +6,6 @@ import (
 	"github.com/grafana/sobek"
 )
 
-// Sizeof implements the global sizeof() function.
 // Usage: sizeof(obj) -> returns estimated bytes in memory
 func (r *Registry) Sizeof(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) == 0 {
@@ -25,13 +24,11 @@ func estimateSize(val sobek.Value) int64 {
 		return 0
 	}
 
-	// 1. Export to Go value to analyze
 	export := val.Export()
 	if export == nil {
 		return 0 // null/undefined
 	}
 
-	// 2. Use reflect for Go types
 	v := reflect.ValueOf(export)
 	switch v.Kind() {
 	case reflect.Bool:

@@ -235,7 +235,6 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct, pkgP
 						continue
 					}
 
-					// Resolve import path
 					var importPath string
 					if info != nil {
 						if t, ok := info.Types[field.Type]; ok {

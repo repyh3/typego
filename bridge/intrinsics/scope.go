@@ -30,7 +30,6 @@ func (s *scopeState) RecoverJs(call sobek.FunctionCall) sobek.Value {
 	return sobek.Undefined()
 }
 
-// Scope implements the typego.scope() bridge.
 // Usage: typego.scope(func(defer, recover) { ... })
 func (r *Registry) Scope(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) < 1 {

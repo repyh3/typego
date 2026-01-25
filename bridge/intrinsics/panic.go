@@ -2,7 +2,6 @@ package intrinsics
 
 import "github.com/grafana/sobek"
 
-// Panic implements the global panic() function for JS.
 // Usage: panic("message")
 func (r *Registry) Panic(call sobek.FunctionCall) sobek.Value {
 	msg := "panic: (nil)"

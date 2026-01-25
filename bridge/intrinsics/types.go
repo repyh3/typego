@@ -44,5 +44,4 @@ var processTypes string
 //go:embed timers.d.ts
 var timerTypes string
 
-// IntrinsicTypes aggregates all intrinsic type definitions for the CLI tools.
 var IntrinsicTypes = sizeofTypes + "\n" + panicTypes + "\n" + deferTypes + "\n" + scopeTypes + "\n" + recoverTypes + "\n" + pointerTypes + "\n" + concurrencyTypes + "\n" + sliceTypes + "\n" + iotaTypes + "\n" + encodingTypes + "\n" + bufferTypes + "\n" + ioTypes + "\n" + processTypes + "\n" + timerTypes

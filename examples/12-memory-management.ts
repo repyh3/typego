@@ -13,16 +13,12 @@ import { Println } from "go:fmt";
 function main() {
     Println("=== Memory Management Showcase ===");
 
-    // 1. Size Inspection
     const obj = { a: 1, b: "hello", c: new Uint8Array(100) };
     Println(`Size of object: ${sizeof(obj)} bytes`);
 
-    // 2. Allocation with Capacity
-    // make(Type, length, capacity)
     const buffer = make(Uint8Array, 10, 100);
     Println(`Buffer length: ${buffer.length}, capacity: ${cap(buffer)}`);
 
-    // 3. Efficient Copying
     const src = new Uint8Array([1, 2, 3, 4, 5]);
     const dst = new Uint8Array(3);
 
@@ -30,7 +26,6 @@ function main() {
     const n = copy(dst, src);
     Println(`Copied ${n} elements. Dest: [${Array.from(dst).join(", ")}]`);
 
-    // 4. Working with buffers
     const large = make(Uint8Array, 0, 1024);
     Println(`Empty buffer with 1KB capacity: cap=${cap(large)}`);
 }

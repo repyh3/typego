@@ -10,9 +10,8 @@ import { makeShared } from "go:memory";
  * 2. Shared buffers for zero-copy state sharing.
  */
 
-// 1. Create a shared buffer (1 KB)
 const shared = makeShared("main_state", 1024);
-(shared as any)[0] = 0; // Initialize a counter at index 0
+(shared as any)[0] = 0;
 
 async function startWorker(id: number) {
 
