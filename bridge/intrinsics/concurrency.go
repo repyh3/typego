@@ -7,7 +7,6 @@ import (
 	"github.com/grafana/sobek"
 )
 
-// Go implements the typego.go() intrinsic.
 func (r *Registry) Go(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) < 1 {
 		panic(r.vm.NewGoError(newPanicError("go requires a function to execute")))
@@ -42,7 +41,6 @@ func (r *Registry) Go(call sobek.FunctionCall) sobek.Value {
 	return sobek.Undefined()
 }
 
-// Chan represents a bridged Go channel.
 type Chan struct {
 	ch chan sobek.Value
 }
@@ -68,7 +66,6 @@ func (c *Chan) Close(call sobek.FunctionCall) sobek.Value {
 	return sobek.Undefined()
 }
 
-// MakeChan implements makeChan(size)
 func (r *Registry) MakeChan(call sobek.FunctionCall) sobek.Value {
 	size := 0
 	if len(call.Arguments) > 0 {
@@ -88,7 +85,6 @@ func (r *Registry) MakeChan(call sobek.FunctionCall) sobek.Value {
 	return obj
 }
 
-// Select implements select([{ chan, send, recv, default }])
 func (r *Registry) Select(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) < 1 {
 		return sobek.Undefined()
@@ -104,7 +100,6 @@ func (r *Registry) Select(call sobek.FunctionCall) sobek.Value {
 		caseObj := casesArr.Get(fmt.Sprintf("%d", i)).ToObject(r.vm)
 		caseObjs = append(caseObjs, caseObj)
 
-		// 1. Default case
 		if defValue := caseObj.Get("default"); defValue != nil && !sobek.IsUndefined(defValue) {
 			selectCases = append(selectCases, reflect.SelectCase{
 				Dir: reflect.SelectDefault,
@@ -112,7 +107,6 @@ func (r *Registry) Select(call sobek.FunctionCall) sobek.Value {
 			continue
 		}
 
-		// 2. Channel operation
 		chWrapper := caseObj.Get("chan")
 		if chWrapper == nil || sobek.IsUndefined(chWrapper) {
 			continue
@@ -157,7 +151,6 @@ func (r *Registry) Select(call sobek.FunctionCall) sobek.Value {
 
 	chosenObj := caseObjs[chosen]
 
-	// Handle Result
 	if selectCases[chosen].Dir == reflect.SelectRecv {
 		recvVal := recv.Interface().(sobek.Value)
 		if recvCb := chosenObj.Get("recv"); recvCb != nil && !sobek.IsUndefined(recvCb) {

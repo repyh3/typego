@@ -13,12 +13,10 @@ function main() {
 
     let secret = "Initial Value";
 
-    // Create a pointer to 'secret'
     const ptr = ref(secret);
 
     Println(`Current value via deref: ${deref(ptr)}`);
 
-    // Modify the original variable
     secret = "Updated Value";
 
     // The pointer tracks the change because it points to the variable's "slot"

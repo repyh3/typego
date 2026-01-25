@@ -7,8 +7,6 @@ import (
 	"github.com/grafana/sobek"
 )
 
-// Pointers implements ref() and deref() intrinsics with handle support.
-
 func (r *Registry) Ref(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) == 0 {
 		return sobek.Undefined()

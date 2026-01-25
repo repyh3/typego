@@ -4,7 +4,6 @@ import (
 	"github.com/grafana/sobek"
 )
 
-// Cap implements cap(v)
 func (r *Registry) Cap(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) < 1 {
 		return r.vm.ToValue(0)
@@ -32,7 +31,6 @@ func (r *Registry) Cap(call sobek.FunctionCall) sobek.Value {
 	return r.vm.ToValue(0)
 }
 
-// Make implements make(Type, len, cap)
 func (r *Registry) Make(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) < 2 {
 		panic(r.vm.NewTypeError("make requires at least a type and a length"))
@@ -51,7 +49,6 @@ func (r *Registry) Make(call sobek.FunctionCall) sobek.Value {
 
 	// If typ is a constructor (e.g. Uint8Array)
 	if _, ok := sobek.AssertFunction(typ); ok {
-		// New TypedArray(capacity)
 		arr, err := r.vm.New(typ, r.vm.ToValue(capacity))
 		if err != nil {
 			panic(err)
@@ -69,7 +66,6 @@ func (r *Registry) Make(call sobek.FunctionCall) sobek.Value {
 	return sobek.Undefined()
 }
 
-// Copy implements copy(dst, src)
 func (r *Registry) Copy(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) < 2 {
 		return r.vm.ToValue(0)

@@ -5,7 +5,6 @@ import (
 	"github.com/grafana/sobek"
 )
 
-// JSReader wraps a JS object with a read() method into an io.Reader
 type JSReader struct {
 	vm   *sobek.Runtime
 	obj  *sobek.Object
@@ -40,7 +39,6 @@ func (r *Registry) WrapReader(call sobek.FunctionCall) sobek.Value {
 	return r.vm.ToValue(&JSReader{vm: r.vm, obj: obj, read: read})
 }
 
-// JSWriter wraps a JS object with a write() method into an io.Writer
 type JSWriter struct {
 	vm    *sobek.Runtime
 	obj   *sobek.Object

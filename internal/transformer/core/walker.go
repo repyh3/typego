@@ -4,7 +4,6 @@ import (
 	"github.com/grafana/sobek/ast"
 )
 
-// Visitor is an interface for AST visitors
 type Visitor interface {
 	Visit(node ast.Node) []TextEdit
 }
@@ -18,13 +17,11 @@ func RegisterVisitor(v Visitor) {
 func WalkAndCollect(node ast.Node, source string) []TextEdit {
 	var allEdits []TextEdit
 
-	// 1. Visit current node with registered visitors
 	for _, v := range Visitors {
 		edits := v.Visit(node)
 		allEdits = append(allEdits, edits...)
 	}
 
-	// 2. Recurse children
 	switch n := node.(type) {
 	case *ast.Program:
 		for _, stmt := range n.Body {

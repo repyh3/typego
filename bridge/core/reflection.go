@@ -27,13 +27,10 @@ type fieldInfo struct {
 	Anonymous bool
 }
 
-// cache for struct method metadata: reflect.Type -> []methodInfo
 var typeMethodCache sync.Map
-
-// cache for struct field metadata: reflect.Type -> []fieldInfo
 var typeFieldCache sync.Map
 
-// BindStruct exposes a Go struct to JavaScript with full field and method access.
+// BindStruct exposes a Go struct to JavaScript.
 // Supports nested structs (converted recursively) and callback arguments.
 func BindStruct(vm *sobek.Runtime, name string, s interface{}) error {
 	obj, err := bindValue(vm, reflect.ValueOf(s), make(map[uintptr]sobek.Value))
@@ -43,7 +40,6 @@ func BindStruct(vm *sobek.Runtime, name string, s interface{}) error {
 	return vm.GlobalObject().Set(name, obj)
 }
 
-// bindValue recursively converts a Go value to a JavaScript value.
 // The visited map prevents infinite loops for circular references.
 func bindValue(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Value) (sobek.Value, error) {
 	if !v.IsValid() {

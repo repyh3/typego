@@ -6,7 +6,6 @@ import (
 	"github.com/grafana/sobek"
 )
 
-// EnableTimers injects setTimeout and setInterval globals
 func (r *Registry) EnableTimers() {
 	_ = r.vm.Set("setTimeout", func(call sobek.FunctionCall) sobek.Value {
 		fn, _ := sobek.AssertFunction(call.Argument(0))

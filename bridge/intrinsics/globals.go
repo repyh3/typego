@@ -1,6 +1,5 @@
 package intrinsics
 
-// BufferShimJS is the JavaScript polyfill for the Buffer global.
 const BufferShimJS = `if (typeof Buffer === 'undefined') { 
 	globalThis.Buffer = { 
 		from: function(data, encoding) { 
@@ -13,7 +12,6 @@ const BufferShimJS = `if (typeof Buffer === 'undefined') {
 	}; 
 }`
 
-// EncodingShimJS provides TextEncoder and TextDecoder polyfills.
 const EncodingShimJS = `
 (function() {
 	if (typeof TextEncoder === 'undefined') {
@@ -34,16 +32,11 @@ const EncodingShimJS = `
 })();
 `
 
-// EnableGlobals injects all environment globals into the VM.
 // This replaces the legacy polyfills package.
 func (r *Registry) EnableGlobals() {
-	// 1. Native backing intrinsics (already set in Enable)
-
-	// 2. JS Shims for Standard APIs
 	_, _ = r.vm.RunString(EncodingShimJS)
 	_, _ = r.vm.RunString(BufferShimJS)
 
-	// 3. Environment Globals
 	r.EnableProcess()
 	r.EnableTimers()
 }
