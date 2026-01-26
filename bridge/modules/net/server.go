@@ -37,7 +37,6 @@ func (s *Server) ListenAndServe(addr string, handler sobek.Callable) error {
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Create JS Request and Response wrappers
 			req := s.wrapRequest(r)
 			res := s.wrapResponse(w, r)
 
@@ -45,19 +44,16 @@ func (s *Server) ListenAndServe(addr string, handler sobek.Callable) error {
 
 			s.el.RunOnLoop(func() {
 				defer close(done)
-				// Call the JS handler with (req, res)
 				_, err := handler(sobek.Undefined(), req, res)
 				if err != nil {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				}
 			})
 
-			// Wait for handler to complete
 			<-done
 		}),
 	}
 
-	// Start server in background
 	s.el.WGAdd(1)
 	go func() {
 		defer s.el.WGDone()
@@ -85,14 +81,12 @@ func (s *Server) Close(timeout time.Duration) error {
 func (s *Server) wrapRequest(r *http.Request) sobek.Value {
 	req := s.vm.NewObject()
 
-	// Basic properties
 	_ = req.Set("method", r.Method)
 	_ = req.Set("url", r.URL.String())
 	_ = req.Set("path", r.URL.Path)
 	_ = req.Set("host", r.Host)
 	_ = req.Set("proto", r.Proto)
 
-	// Query parameters
 	query := s.vm.NewObject()
 	for k, v := range r.URL.Query() {
 		if len(v) == 1 {
@@ -103,7 +97,6 @@ func (s *Server) wrapRequest(r *http.Request) sobek.Value {
 	}
 	_ = req.Set("query", query)
 
-	// Headers
 	headers := s.vm.NewObject()
 	for k, v := range r.Header {
 		if len(v) == 1 {
@@ -114,7 +107,6 @@ func (s *Server) wrapRequest(r *http.Request) sobek.Value {
 	}
 	_ = req.Set("headers", headers)
 
-	// Body reader (async)
 	_ = req.Set("body", func(call sobek.FunctionCall) sobek.Value {
 		p, resolve, reject := s.el.CreatePromise()
 
@@ -171,7 +163,6 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) sobek.Valu
 		return res // Chainable
 	})
 
-	// Send response and end
 	_ = res.Set("send", func(call sobek.FunctionCall) sobek.Value {
 		if !headersSent {
 			w.WriteHeader(statusCode)
@@ -184,7 +175,6 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) sobek.Valu
 		return sobek.Undefined()
 	})
 
-	// Send JSON response
 	_ = res.Set("json", func(call sobek.FunctionCall) sobek.Value {
 		w.Header().Set("Content-Type", "application/json")
 		if !headersSent {
@@ -202,7 +192,6 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) sobek.Valu
 		return sobek.Undefined()
 	})
 
-	// Redirect
 	_ = res.Set("redirect", func(call sobek.FunctionCall) sobek.Value {
 		url := call.Argument(0).String()
 		code := 302

@@ -91,24 +91,19 @@ func goToTSTypeWithContext(goType string, knownStructs map[string]bool) string {
 		if strings.HasPrefix(goType, "*") {
 			return goToTSTypeWithContext(goType[1:], knownStructs)
 		}
-		// Handle variadic types
 		if strings.HasPrefix(goType, "...") {
 			baseType := goType[3:]
 			return goToTSTypeWithContext(baseType, knownStructs) + "[]"
 		}
-		// Handle channels
 		if strings.HasPrefix(goType, "chan ") || strings.HasPrefix(goType, "<-chan ") || strings.HasPrefix(goType, "chan<- ") {
 			return "any"
 		}
-		// Handle anonymous structs
 		if strings.HasPrefix(goType, "struct{") {
 			return "any"
 		}
-		// Check if it's a known struct from this package
 		if knownStructs != nil && knownStructs[goType] {
 			return goType // Return as-is, it will reference the interface
 		}
-		// Return the type name (may be a struct from this package)
 		return goType
 	}
 }
@@ -183,7 +178,6 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct, pkgP
 			Doc:         strings.TrimSpace(decl.Doc.Text()),
 		}
 
-		// Capture Generic Type Parameters
 		if ts.TypeParams != nil {
 			for _, param := range ts.TypeParams.List {
 				for _, name := range param.Names {

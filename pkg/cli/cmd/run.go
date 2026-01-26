@@ -63,7 +63,7 @@ func init() {
 	RunCmd.Flags().BoolVarP(&compileMode, "compile", "c", false, "Compile to standalone binary (slower)")
 }
 
-// runStandalone compiles the TypeScript to a standalone Go binary and runs it.
+// runStandalone compiles and runs the TypeScript file as a standalone binary.
 // This is the original behavior, now only used with --compile flag.
 func runStandalone(filename string) {
 	absPath, _ := filepath.Abs(filename)
