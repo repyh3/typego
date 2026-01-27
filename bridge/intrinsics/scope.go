@@ -30,8 +30,6 @@ func (s *scopeState) RecoverJs(call sobek.FunctionCall) sobek.Value {
 	return sobek.Undefined()
 }
 
-// Scope implements the typego.scope() bridge.
-// Usage: typego.scope(func(defer, recover) { ... })
 func (r *Registry) Scope(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) < 1 {
 		panic(r.vm.NewGoError(newPanicError("scope requires a callback function")))
@@ -82,7 +80,6 @@ func (r *Registry) Scope(call sobek.FunctionCall) sobek.Value {
 		}
 	}()
 
-	// Call the user's function, passing our 'defer' and 'recover' functions
 	ret, err := fn(sobek.Undefined(), r.vm.ToValue(state.DeferJs), r.vm.ToValue(state.RecoverJs))
 	if err != nil {
 		// This handles non-panic errors by converting them to panics within the scope
