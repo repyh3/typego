@@ -125,7 +125,6 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 		res.JS = string(result.OutputFiles[0].Contents)
 	}
 
-	// Save to cache
 	if len(virtualModules) == 0 {
 		_ = SaveCache(entryPoint, res)
 	}

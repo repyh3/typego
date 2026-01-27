@@ -28,7 +28,6 @@ func NewFetcher() (*Fetcher, error) {
 	return &Fetcher{TempDir: tempDir}, nil
 }
 
-// Get downloading a package version using 'go get'
 func (f *Fetcher) Get(pkgPath string) error {
 	cmd := exec.Command("go", "get", pkgPath)
 	cmd.Dir = f.TempDir
@@ -38,7 +37,6 @@ func (f *Fetcher) Get(pkgPath string) error {
 	return nil
 }
 
-// Cleanup removes the temporary directory
 func (f *Fetcher) Cleanup() {
 	os.RemoveAll(f.TempDir)
 }
