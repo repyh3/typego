@@ -7,7 +7,6 @@ import (
 	"github.com/repyh/typego/eventloop"
 )
 
-// Registry holds references needed for intrinsics
 type Registry struct {
 	vm           *sobek.Runtime
 	currentScope *scopeState

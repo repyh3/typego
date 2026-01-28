@@ -6,7 +6,6 @@ import (
 
 // Buffer intrinsics provide high-performance byte array operations.
 
-// BufferAlloc implements Buffer.alloc(size)
 func (r *Registry) BufferAlloc(call sobek.FunctionCall) sobek.Value {
 	size := 0
 	if len(call.Arguments) > 0 {
@@ -21,7 +20,6 @@ func (r *Registry) BufferAlloc(call sobek.FunctionCall) sobek.Value {
 	return tArray
 }
 
-// BufferFrom implements Buffer.from(data, encoding)
 func (r *Registry) BufferFrom(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) == 0 {
 		return r.vm.ToValue([]byte{})

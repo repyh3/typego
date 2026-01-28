@@ -33,23 +33,18 @@ func (r *Registry) EnableProcess() {
 		}
 	}
 
-	// Force color
 	_ = env.Set("FORCE_COLOR", "1")
 	_ = proc.Set("env", env)
 
-	// process.platform
 	_ = proc.Set("platform", runtime.GOOS)
 
-	// process.cwd()
 	_ = proc.Set("cwd", func(call sobek.FunctionCall) sobek.Value {
 		wd, _ := os.Getwd()
 		return r.vm.ToValue(wd)
 	})
 
-	// process.argv
 	_ = proc.Set("argv", os.Args)
 
-	// process.version
 	_ = proc.Set("version", runtime.Version())
 
 	_ = r.vm.Set("process", proc)

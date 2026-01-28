@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// Binds both top-level functions and exported structs.
 func GenerateShim(info *PackageInfo, variableName string) string {
 	var sb strings.Builder
 
@@ -44,16 +43,13 @@ func GenerateTypes(info *PackageInfo) string {
 	sb.WriteString(fmt.Sprintf("// MODULE: go:%s\n", info.ImportPath))
 	sb.WriteString(fmt.Sprintf("declare module \"go:%s\" {\n", info.ImportPath))
 
-	// Collect imports
 	imports := make(map[string]map[string]bool) // pkgPath -> typeName -> bool
 	for _, st := range info.Structs {
-		// Collect from fields
 		for _, field := range st.Fields {
 			if field.ImportPath != "" && field.ImportPath != info.ImportPath {
 				collectImport(imports, field.ImportPath, field.Type)
 			}
 		}
-		// Collect from embeds
 		for _, embed := range st.Embeds {
 			if embed.ImportPath != "" && embed.ImportPath != info.ImportPath {
 				collectImport(imports, embed.ImportPath, embed.Name)
@@ -61,7 +57,6 @@ func GenerateTypes(info *PackageInfo) string {
 		}
 	}
 
-	// Generate import statements
 	for pkgPath, types := range imports {
 		var typeList []string
 		for t := range types {

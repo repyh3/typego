@@ -85,14 +85,12 @@ func (s *Server) Close(timeout time.Duration) error {
 func (s *Server) wrapRequest(r *http.Request) sobek.Value {
 	req := s.vm.NewObject()
 
-	// Basic properties
 	_ = req.Set("method", r.Method)
 	_ = req.Set("url", r.URL.String())
 	_ = req.Set("path", r.URL.Path)
 	_ = req.Set("host", r.Host)
 	_ = req.Set("proto", r.Proto)
 
-	// Query parameters
 	query := s.vm.NewObject()
 	for k, v := range r.URL.Query() {
 		if len(v) == 1 {
@@ -103,7 +101,6 @@ func (s *Server) wrapRequest(r *http.Request) sobek.Value {
 	}
 	_ = req.Set("query", query)
 
-	// Headers
 	headers := s.vm.NewObject()
 	for k, v := range r.Header {
 		if len(v) == 1 {
@@ -202,7 +199,6 @@ func (s *Server) wrapResponse(w http.ResponseWriter, r *http.Request) sobek.Valu
 		return sobek.Undefined()
 	})
 
-	// Redirect
 	_ = res.Set("redirect", func(call sobek.FunctionCall) sobek.Value {
 		url := call.Argument(0).String()
 		code := 302

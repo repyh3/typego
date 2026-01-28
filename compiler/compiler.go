@@ -90,7 +90,6 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 						case "go:crypto":
 							content = "const c = (globalThis as any).__go_crypto__; export const Sha256 = c.Sha256; export const Sha512 = c.Sha512; export const HmacSha256 = c.HmacSha256; export const HmacSha256Verify = c.HmacSha256Verify; export const RandomBytes = c.RandomBytes; export const Uuid = c.Uuid;"
 
-						// TypeGo Stdlib
 						case "typego:memory":
 							content = "const m = (globalThis as any).__typego_memory__; export const makeShared = m.makeShared; export const stats = m.stats; export const ptr = m.ptr;"
 						case "typego:worker":
@@ -125,7 +124,6 @@ func Compile(entryPoint string, virtualModules map[string]string) (*Result, erro
 		res.JS = string(result.OutputFiles[0].Contents)
 	}
 
-	// Save to cache
 	if len(virtualModules) == 0 {
 		_ = SaveCache(entryPoint, res)
 	}

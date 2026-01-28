@@ -4,7 +4,6 @@ import (
 	"github.com/grafana/sobek"
 )
 
-// ToArrayBuffer converts a Go byte slice to a JavaScript ArrayBuffer.
 // The returned ArrayBuffer is a copy of the original data, so modifications
 // in JavaScript will not affect the Go slice.
 //
@@ -14,7 +13,6 @@ func ToArrayBuffer(vm *sobek.Runtime, data []byte) sobek.Value {
 	return vm.ToValue(vm.NewArrayBuffer(data))
 }
 
-// MapSharedBuffer exposes a Go byte slice as a global JavaScript TypedArray.
 // The backing memory is shared between Go and JavaScript, meaning modifications
 // from either side are immediately visible to the other.
 //

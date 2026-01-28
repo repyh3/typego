@@ -37,13 +37,9 @@ const EncodingShimJS = `
 // EnableGlobals injects all environment globals into the VM.
 // This replaces the legacy polyfills package.
 func (r *Registry) EnableGlobals() {
-	// 1. Native backing intrinsics (already set in Enable)
-
-	// 2. JS Shims for Standard APIs
 	_, _ = r.vm.RunString(EncodingShimJS)
 	_, _ = r.vm.RunString(BufferShimJS)
 
-	// 3. Environment Globals
 	r.EnableProcess()
 	r.EnableTimers()
 }

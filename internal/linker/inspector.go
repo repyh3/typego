@@ -183,7 +183,6 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct, pkgP
 			Doc:         strings.TrimSpace(decl.Doc.Text()),
 		}
 
-		// Capture Generic Type Parameters
 		if ts.TypeParams != nil {
 			for _, param := range ts.TypeParams.List {
 				for _, name := range param.Names {
@@ -201,7 +200,6 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct, pkgP
 					goType := types.ExprString(field.Type)
 					cleanType := strings.TrimPrefix(goType, "*")
 
-					// Resolve import path for embedded type
 					var importPath string
 					if info != nil {
 						if t, ok := info.Types[field.Type]; ok {
@@ -235,7 +233,6 @@ func parseTypeDecl(decl *ast.GenDecl, structMap map[string]*ExportedStruct, pkgP
 						continue
 					}
 
-					// Resolve import path
 					var importPath string
 					if info != nil {
 						if t, ok := info.Types[field.Type]; ok {
