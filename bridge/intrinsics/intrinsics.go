@@ -7,7 +7,6 @@ import (
 	"github.com/repyh/typego/eventloop"
 )
 
-// Registry holds references needed for intrinsics
 type Registry struct {
 	vm           *sobek.Runtime
 	currentScope *scopeState
@@ -15,7 +14,6 @@ type Registry struct {
 	el           *eventloop.EventLoop
 }
 
-// Enable registers all global intrinsics (panic, sizeof, defer/scope)
 func Enable(vm *sobek.Runtime, el *eventloop.EventLoop) *Registry {
 	r := &Registry{vm: vm, el: el}
 

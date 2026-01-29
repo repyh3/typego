@@ -8,7 +8,6 @@ import (
 
 // Encoding intrinsics provide high-performance string/byte conversion.
 
-// Encode implements TextEncoder.prototype.encode
 func (r *Registry) Encode(call sobek.FunctionCall) sobek.Value {
 	var bytes []byte
 	if len(call.Arguments) > 0 {
@@ -26,7 +25,6 @@ func (r *Registry) Encode(call sobek.FunctionCall) sobek.Value {
 	return tArray
 }
 
-// Decode implements TextDecoder.prototype.decode
 func (r *Registry) Decode(call sobek.FunctionCall) sobek.Value {
 	if len(call.Arguments) == 0 {
 		return r.vm.ToValue("")
