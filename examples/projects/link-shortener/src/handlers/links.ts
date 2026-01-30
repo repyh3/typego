@@ -8,7 +8,6 @@ interface ShortenRequest {
 
 export function handleShorten(c: Context): void {
     const body = c.Request.Body;
-    // Parse JSON body
     let req: ShortenRequest;
     try {
         req = JSON.parse(body);

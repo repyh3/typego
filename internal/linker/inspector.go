@@ -106,9 +106,8 @@ func goToTSTypeWithContext(goType string, knownStructs map[string]bool) string {
 		}
 		// Check if it's a known struct from this package
 		if knownStructs != nil && knownStructs[goType] {
-			return goType // Return as-is, it will reference the interface
+			return goType
 		}
-		// Return the type name (may be a struct from this package)
 		return goType
 	}
 }

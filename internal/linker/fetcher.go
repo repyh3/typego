@@ -18,7 +18,6 @@ func NewFetcher() (*Fetcher, error) {
 		return nil, err
 	}
 
-	// Initialize a dummy module to hold dependencies
 	cmd := exec.Command("go", "mod", "init", "typego-dummy")
 	cmd.Dir = tempDir
 	if out, err := cmd.CombinedOutput(); err != nil {

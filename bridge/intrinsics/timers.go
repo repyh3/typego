@@ -72,7 +72,6 @@ func (r *Registry) EnableTimers() {
 			}
 		}()
 
-		// Return a simple ID object for clearInterval
 		id := r.vm.NewObject()
 		_ = id.Set("__stop__", stop)
 		return id

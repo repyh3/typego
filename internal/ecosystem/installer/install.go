@@ -70,7 +70,6 @@ func RunInstall(cwd string) error {
 		allUsedModules = append(allUsedModules, imports...)
 	}
 
-	// Dedup
 	usedMap := make(map[string]bool)
 	for _, m := range allUsedModules {
 		// remove "go:" prefix logic should be in Extractor or here
@@ -98,7 +97,6 @@ func RunInstall(cwd string) error {
 		return err
 	}
 
-	// Initialize go.mod in workDir
 	_ = resolver.InitGoMod(workDir, "typego_jit_build")
 
 	// Detect if we are in the typego repo (local dev) to add source replacement
@@ -183,7 +181,6 @@ func RunInstall(cwd string) error {
 	binaryPath := filepath.Join(binDir, BinaryName)
 	fmt.Println("✅ Install Complete! Binary cached at", binaryPath)
 
-	// Ensure .typego is ignored
 	_ = ecosystem.EnsureGitIgnore(cwd)
 
 	// Write checksum for stale detection
@@ -194,7 +191,6 @@ func RunInstall(cwd string) error {
 	// Generate lockfile from resolved go.mod
 	writeLockfile(cwd, workDir, config.Dependencies)
 
-	// Auto-generate types
 	if len(packageInfos) > 0 {
 		fmt.Println("📦 Syncing type definitions...")
 		writeTypeDefinitions(cwd, packageInfos)
