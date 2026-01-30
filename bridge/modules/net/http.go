@@ -172,7 +172,6 @@ func Register(vm *sobek.Runtime, el *eventloop.EventLoop) {
 			panic(vm.NewGoError(err))
 		}
 
-		// Return the server for later shutdown
 		srvObj := vm.NewObject()
 		_ = srvObj.Set("close", func(call sobek.FunctionCall) sobek.Value {
 			timeout := 5 * time.Second

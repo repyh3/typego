@@ -37,7 +37,6 @@ Examples:
 			return
 		}
 
-		// If specific module provided, update only that
 		if len(args) > 0 {
 			module := args[0]
 			if _, ok := config.Dependencies[module]; !ok {
@@ -60,7 +59,6 @@ Examples:
 
 			internal.Success(fmt.Sprintf("Updated %s to %s", module, latestVersion))
 		} else {
-			// Update all
 			internal.Step("🔄", "Updating all dependencies...")
 			updated := 0
 
@@ -96,17 +94,14 @@ Examples:
 
 // getLatestVersion queries go list to get the latest version of a module
 func getLatestVersion(module string) (string, error) {
-	// Create temp dir for go list
 	tmpDir := filepath.Join(os.TempDir(), "typego-update-check")
 	_ = os.MkdirAll(tmpDir, 0755)
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
-	// Initialize a dummy go.mod
 	initCmd := exec.Command("go", "mod", "init", "temp")
 	initCmd.Dir = tmpDir
 	_ = initCmd.Run()
 
-	// Query latest version
 	cmd := exec.Command("go", "list", "-m", "-versions", module)
 	cmd.Dir = tmpDir
 	output, err := cmd.Output()
@@ -120,10 +115,8 @@ func getLatestVersion(module string) (string, error) {
 		return "latest", nil
 	}
 
-	// Return the last version (most recent)
 	return parts[len(parts)-1], nil
 }
 
 func init() {
-	// Add to subcommand of typego if needed
 }

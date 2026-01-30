@@ -98,12 +98,10 @@ function handleStats(c: Context): void {
 // === Server setup ===
 const app = Default();
 
-// Health check
 app.GET("/api/health", (c: Context) => {
     c.JSON(200, { status: "ok", service: "shortlink", links_count: links.size });
 });
 
-// Link management
 app.POST("/api/shorten", handleShorten);
 app.GET("/api/shorten", handleShorten); // Also allow GET for easy testing
 app.GET("/api/stats/:code", handleStats);

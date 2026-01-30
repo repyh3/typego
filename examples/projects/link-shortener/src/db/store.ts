@@ -1,4 +1,3 @@
-// In-memory link storage
 const links: Map<string, { url: string; clicks: number; createdAt: Date }> = new Map();
 
 export function saveLink(code: string, url: string): void {

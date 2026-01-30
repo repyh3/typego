@@ -16,7 +16,6 @@ func DeferPlugin() api.Plugin {
 		Name: "typego-defer",
 		Setup: func(build api.PluginBuild) {
 
-			// Initialize Visitors
 			core.Visitors = nil
 			core.RegisterVisitor(&visitors.DeferVisitor{})
 			core.RegisterVisitor(&visitors.IotaVisitor{})
@@ -51,7 +50,6 @@ func DeferPlugin() api.Plugin {
 					}, nil
 				}
 
-				// 4. Return to esbuild
 				return api.OnLoadResult{
 					Contents: &newCode,
 					Loader:   api.LoaderJS,
