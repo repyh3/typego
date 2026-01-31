@@ -22,7 +22,6 @@ type Factory struct {
 	mu       sync.Mutex
 }
 
-// NewFactory creates a new memory factory.
 func NewFactory() *Factory {
 	return &Factory{
 		segments: make(map[string]*SharedSegment),
@@ -43,12 +42,10 @@ func (f *Factory) MakeShared(name string, size int) *SharedSegment {
 	return s
 }
 
-// Module implements the typego:memory module.
 type Module struct {
 	Factory *Factory
 }
 
-// GetStats returns memory statistics to JS.
 func (m *Module) GetStats(vm *sobek.Runtime) func(sobek.FunctionCall) sobek.Value {
 	return func(call sobek.FunctionCall) sobek.Value {
 		var ms runtime.MemStats
@@ -64,7 +61,6 @@ func (m *Module) GetStats(vm *sobek.Runtime) func(sobek.FunctionCall) sobek.Valu
 	}
 }
 
-// Register injects the typego:memory module into the runtime.
 func Register(vm *sobek.Runtime, el *eventloop.EventLoop, f *Factory) {
 	if f == nil {
 		f = NewFactory()
@@ -96,7 +92,6 @@ func Register(vm *sobek.Runtime, el *eventloop.EventLoop, f *Factory) {
 		return res
 	})
 
-	// Ptr factory for referencing values
 	_ = obj.Set("ptr", func(call sobek.FunctionCall) sobek.Value {
 		val := call.Argument(0)
 		return val

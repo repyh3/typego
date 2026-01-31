@@ -6,7 +6,6 @@ import (
 	"github.com/grafana/sobek"
 )
 
-// EnableTimers injects setTimeout and setInterval globals
 func (r *Registry) EnableTimers() {
 	_ = r.vm.Set("setTimeout", func(call sobek.FunctionCall) sobek.Value {
 		fn, _ := sobek.AssertFunction(call.Argument(0))
@@ -39,7 +38,6 @@ func (r *Registry) EnableTimers() {
 		if obj != nil {
 			if ch := obj.Get("__stop__"); ch != nil {
 				if stop, ok := ch.Export().(chan struct{}); ok {
-					// Check if closed
 					select {
 					case <-stop:
 					default:
@@ -72,7 +70,6 @@ func (r *Registry) EnableTimers() {
 			}
 		}()
 
-		// Return a simple ID object for clearInterval
 		id := r.vm.NewObject()
 		_ = id.Set("__stop__", stop)
 		return id

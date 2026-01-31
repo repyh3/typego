@@ -32,7 +32,6 @@ var TypesCmd = &cobra.Command{
 			return
 		}
 
-		// Read existing (target) file first
 		var currentContent []byte
 		if existing, err := os.ReadFile(dtsPath); err == nil && len(existing) > 0 {
 			currentContent = existing
@@ -47,7 +46,6 @@ var TypesCmd = &cobra.Command{
 		} else if len(currentContent) == 0 {
 			currentContent = []byte(newGlobal)
 		} else {
-			// Prepend if not found
 			currentContent = append([]byte(newGlobal+"\n"), currentContent...)
 		}
 
@@ -58,14 +56,11 @@ var TypesCmd = &cobra.Command{
 		}
 		defer fetcher.Cleanup()
 
-		// Collect all TypeScript files to scan (deduplicated)
 		fileSet := make(map[string]bool)
 		if len(args) > 0 {
-			// Explicit file provided
 			absPath, _ := filepath.Abs(args[0])
 			fileSet[absPath] = true
 		} else {
-			// Recursively find all .ts files in the current project
 			err := filepath.WalkDir(".", func(path string, d os.DirEntry, err error) error {
 				if err != nil {
 					return err
@@ -80,7 +75,6 @@ var TypesCmd = &cobra.Command{
 					return nil
 				}
 
-				// Only collect .ts files
 				if filepath.Ext(path) == ".ts" {
 					absPath, _ := filepath.Abs(path)
 					fileSet[absPath] = true
@@ -92,7 +86,6 @@ var TypesCmd = &cobra.Command{
 			}
 		}
 
-		// Collect unique Go imports from all files
 		goImports := make(map[string]bool)
 
 		// FORCE: Always include core modules that need inspection
@@ -213,7 +206,6 @@ var TypesCmd = &cobra.Command{
 }
 
 func init() {
-	// Registered in root.go
 }
 
 func updateTypeBlock(content []byte, moduleName, typeDef string) []byte {
