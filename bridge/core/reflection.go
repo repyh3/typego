@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"sync"
 
 	"github.com/grafana/sobek"
@@ -337,6 +338,11 @@ func wrapJSCallback(vm *sobek.Runtime, callable sobek.Callable, goType reflect.T
 }
 
 func bindSlice(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Value) (sobek.Value, error) {
+	// @optimized: Use NewArrayBuffer for byte slices to avoid massive boxing overhead.
+	if v.Kind() == reflect.Slice && v.Type().Elem().Kind() == reflect.Uint8 {
+		return ToArrayBuffer(vm, v.Bytes()), nil
+	}
+
 	// @optimized: Pre-allocate slice and use NewArray(vals...) to avoid repeated Set calls.
 	l := v.Len()
 	vals := make([]interface{}, l)
@@ -352,16 +358,30 @@ func bindSlice(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Val
 
 func bindMap(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Value) (sobek.Value, error) {
 	obj := vm.NewObject()
-	for _, key := range v.MapKeys() {
+	// @optimized: Use MapRange to avoid allocating slice of keys.
+	iter := v.MapRange()
+	for iter.Next() {
+		key := iter.Key()
 		var keyStr string
-		// @optimized: Avoid Sprintf if key is already a string.
+
+		// @optimized: Avoid Interface() boxing for string keys (hot path).
 		if key.Kind() == reflect.String {
 			keyStr = key.String()
 		} else {
-			keyStr = fmt.Sprint(key.Interface())
+			// @optimized: Avoid Sprintf/String overhead for common numeric types.
+			switch k := key.Interface().(type) {
+			case int:
+				keyStr = strconv.Itoa(k)
+			case int64:
+				keyStr = strconv.FormatInt(k, 10)
+			case int32:
+				keyStr = strconv.FormatInt(int64(k), 10)
+			default:
+				keyStr = fmt.Sprint(k)
+			}
 		}
 
-		val, err := bindValue(vm, v.MapIndex(key), visited)
+		val, err := bindValue(vm, iter.Value(), visited)
 		if err != nil {
 			return nil, err
 		}
