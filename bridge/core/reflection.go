@@ -8,7 +8,6 @@ import (
 	"github.com/grafana/sobek"
 )
 
-// Binding represents a Go struct that has been bound to the JavaScript runtime.
 type Binding struct {
 	Name   string
 	Target interface{}
@@ -27,10 +26,8 @@ type fieldInfo struct {
 	Anonymous bool
 }
 
-// cache for struct method metadata: reflect.Type -> []methodInfo
 var typeMethodCache sync.Map
 
-// cache for struct field metadata: reflect.Type -> []fieldInfo
 var typeFieldCache sync.Map
 
 // BindStruct exposes a Go struct to JavaScript with full field and method access.
@@ -43,7 +40,6 @@ func BindStruct(vm *sobek.Runtime, name string, s interface{}) error {
 	return vm.GlobalObject().Set(name, obj)
 }
 
-// bindValue recursively converts a Go value to a JavaScript value.
 // The visited map prevents infinite loops for circular references.
 func bindValue(vm *sobek.Runtime, v reflect.Value, visited map[uintptr]sobek.Value) (sobek.Value, error) {
 	if !v.IsValid() {
@@ -317,7 +313,6 @@ func wrapJSCallback(vm *sobek.Runtime, callable sobek.Callable, goType reflect.T
 			return results
 		}
 
-		// Convert result back to Go
 		numOut := goType.NumOut()
 		if numOut == 0 {
 			return nil

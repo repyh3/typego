@@ -27,7 +27,6 @@ func (r *Registry) Go(call sobek.FunctionCall) sobek.Value {
 			}
 		}()
 
-		// Execute the function in the VM
 		// NOTE: Sobek is NOT thread-safe for concurrent access to the SAME VM.
 		// We use the Registry's VMLock to ensure only one goroutine (or main thread) executes JS at a time.
 		r.VMLock.Lock()
@@ -68,7 +67,6 @@ func (c *Chan) Close(call sobek.FunctionCall) sobek.Value {
 	return sobek.Undefined()
 }
 
-// MakeChan implements makeChan(size)
 func (r *Registry) MakeChan(call sobek.FunctionCall) sobek.Value {
 	size := 0
 	if len(call.Arguments) > 0 {
@@ -104,7 +102,6 @@ func (r *Registry) Select(call sobek.FunctionCall) sobek.Value {
 		caseObj := casesArr.Get(fmt.Sprintf("%d", i)).ToObject(r.vm)
 		caseObjs = append(caseObjs, caseObj)
 
-		// 1. Default case
 		if defValue := caseObj.Get("default"); defValue != nil && !sobek.IsUndefined(defValue) {
 			selectCases = append(selectCases, reflect.SelectCase{
 				Dir: reflect.SelectDefault,
@@ -112,7 +109,6 @@ func (r *Registry) Select(call sobek.FunctionCall) sobek.Value {
 			continue
 		}
 
-		// 2. Channel operation
 		chWrapper := caseObj.Get("chan")
 		if chWrapper == nil || sobek.IsUndefined(chWrapper) {
 			continue
@@ -131,7 +127,6 @@ func (r *Registry) Select(call sobek.FunctionCall) sobek.Value {
 
 		chValue := reflect.ValueOf(c.ch)
 
-		// Determine Direction
 		if sendVal := caseObj.Get("send"); sendVal != nil && !sobek.IsUndefined(sendVal) {
 			selectCases = append(selectCases, reflect.SelectCase{
 				Dir:  reflect.SelectSend,
@@ -157,7 +152,6 @@ func (r *Registry) Select(call sobek.FunctionCall) sobek.Value {
 
 	chosenObj := caseObjs[chosen]
 
-	// Handle Result
 	if selectCases[chosen].Dir == reflect.SelectRecv {
 		recvVal := recv.Interface().(sobek.Value)
 		if recvCb := chosenObj.Get("recv"); recvCb != nil && !sobek.IsUndefined(recvCb) {
