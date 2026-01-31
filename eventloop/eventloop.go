@@ -124,17 +124,24 @@ func (el *EventLoop) CreatePromise() (promise *sobek.Object, resolve func(interf
 	// Keep the loop alive until the promise is settled
 	el.wg.Add(1)
 
+	// @optimized: Use sync.Once to ensure the promise is resolved/rejected exactly once, preventing negative WaitGroup counters.
+	var once sync.Once
+
 	resolve = func(v interface{}) {
-		el.RunOnLoop(func() {
-			_ = res(v)
-			el.wg.Done()
+		once.Do(func() {
+			el.RunOnLoop(func() {
+				_ = res(v)
+				el.wg.Done()
+			})
 		})
 	}
 
 	reject = func(v interface{}) {
-		el.RunOnLoop(func() {
-			_ = rej(v)
-			el.wg.Done()
+		once.Do(func() {
+			el.RunOnLoop(func() {
+				_ = rej(v)
+				el.wg.Done()
+			})
 		})
 	}
 
